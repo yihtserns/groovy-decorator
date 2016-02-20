@@ -14,6 +14,10 @@ class GqTest extends Specification {
         System.setProperty(GqUtils.TEMP_DIR, temporaryFolder.newFolder().absolutePath)
     }
 
+    def cleanup() {
+        System.clearProperty(GqUtils.TEMP_DIR)
+    }
+
     def <T> T newExample(Class<T> clasz) {
         def file = new File("src/test/groovy/${clasz.package.name.replace('.', '/')}/${clasz.simpleName}.groovy")
         assert file.exists()
