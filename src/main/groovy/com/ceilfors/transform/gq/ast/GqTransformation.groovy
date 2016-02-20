@@ -26,7 +26,6 @@ public class GqTransformation extends AbstractASTTransformation {
         MethodNode method = astNodes[1] as MethodNode
         BlockStatement originalCode = method.code as BlockStatement
 
-
         def closuredOriginalCode = closureX(originalCode)
         closuredOriginalCode.setVariableScope(new VariableScope())
         BlockStatement newCode = new BlockStatement([

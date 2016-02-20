@@ -10,21 +10,22 @@ class GqTest extends Specification {
     @Rule
     TemporaryFolder temporaryFolder
 
-    class Example {
-
-        @Gq
-        int simple() {
-            5
-        }
-    }
-
     def setup() {
         System.setProperty(GqUtils.TEMP_DIR, temporaryFolder.newFolder().absolutePath)
     }
 
+    def <T> T newExample(Class<T> clasz) {
+        def file = new File("src/test/groovy/${clasz.package.name.replace('.', '/')}/${clasz.simpleName}.groovy")
+        assert file.exists()
+
+        GroovyClassLoader invoker = new GroovyClassLoader()
+        def clazz = invoker.parseClass(file)
+        return clazz.newInstance() as T
+    }
+
     def "Should write method name"() {
         setup:
-        def example = new Example()
+        def example = newExample(SimpleExample)
 
         when:
         example.simple()
@@ -35,7 +36,7 @@ class GqTest extends Specification {
 
     def "Should write returned value"() {
         setup:
-        def example = new Example()
+        def example = newExample(SimpleExample)
 
         when:
         example.simple()
