@@ -15,5 +15,4 @@ import java.lang.annotation.Target
 @GroovyASTTransformationClass ("com.ceilfors.transform.gq.ast.GqTransformation")
 public @interface Gq {
 
-    String value() default "true";
 }
