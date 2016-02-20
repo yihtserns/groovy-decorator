@@ -48,4 +48,20 @@ class GqTest extends Specification {
         then:
         GqUtils.gqFile.readLines().last().contains("-> 5")
     }
+
+    def "Should write expression statement and the evaluated expression"() {
+        setup:
+        def example = newExample(ExpressionExample)
+
+        when:
+        def result = example.method()
+
+        then:
+        result == 8
+        GqUtils.gqFile.text == ("3 + 5=8\n")
+    }
+
+
+    // Groovy doc recommends CompileStatic for GqTransformation to make compilation quicker
+    // @Gq introduces result variable which is a pretty common variable name. Make it unique.
 }
