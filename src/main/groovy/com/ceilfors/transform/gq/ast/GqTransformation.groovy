@@ -4,7 +4,10 @@ import com.ceilfors.transform.gq.GqSupport
 import com.ceilfors.transform.gq.GqUtils
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.builder.AstBuilder
-import org.codehaus.groovy.ast.expr.*
+import org.codehaus.groovy.ast.expr.ArgumentListExpression
+import org.codehaus.groovy.ast.expr.ClosureExpression
+import org.codehaus.groovy.ast.expr.Expression
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.CompilePhase
@@ -13,7 +16,6 @@ import org.codehaus.groovy.transform.AbstractASTTransformation
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX
-import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX
 
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 public class GqTransformation extends AbstractASTTransformation {
@@ -30,9 +32,6 @@ public class GqTransformation extends AbstractASTTransformation {
     }
 
     private void transformClassNode(ClassNode classNode) {
-        classNode.addField("gq", ACC_FINAL | ACC_TRANSIENT | ACC_STATIC | ACC_PRIVATE,
-                ClassHelper.make(GqSupport), ctorX(ClassHelper.make(GqSupport)))
-
         def transformer = new ClassCodeExpressionTransformer() {
 
             @Override
