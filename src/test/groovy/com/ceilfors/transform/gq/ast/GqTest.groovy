@@ -27,7 +27,7 @@ class GqTest extends Specification {
         return clazz.newInstance() as T
     }
 
-    def "Should write method name"() {
+    def "Should write name of method with empty parameter"() {
         setup:
         def example = newExample(SimpleExample)
 
@@ -62,6 +62,15 @@ class GqTest extends Specification {
     }
 
 
+    // --- Kludge
     // Groovy doc recommends CompileStatic for GqTransformation to make compilation quicker
+    // Should GcSupport object be a singleton that's imported
+    // Rename GqTransformation to GqASTTransformation to follow standard
+    // Remove ast package as it's a useless layer.
+
+
+    // --- Feature
+    // Support resolving method argument value
     // @Gq introduces result variable which is a pretty common variable name. Make it unique.
+
 }
