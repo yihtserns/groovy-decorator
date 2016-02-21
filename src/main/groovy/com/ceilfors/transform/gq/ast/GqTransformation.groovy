@@ -49,7 +49,7 @@ public class GqTransformation extends AbstractASTTransformation {
                     // Traps normal method call and add expression text to the method call
                     MethodCallExpression methodCallExpression = expression as MethodCallExpression
                     ArgumentListExpression argumentListExpression = methodCallExpression.arguments as ArgumentListExpression
-                    argumentListExpression.expressions.add(0, constX("${argumentListExpression.expressions.get(0).text.replace('(', '').replace(')', '')}" as String))
+                    argumentListExpression.expressions.add(0, constX(argumentListExpression.expressions.get(0).text.replace('(', '').replace(')', '')))
                 }
                 return super.transform(expression)
             }
@@ -64,7 +64,7 @@ public class GqTransformation extends AbstractASTTransformation {
             block {
                 expression {
                     staticMethodCall(GqUtils, "printToFile") {
-                        argumentList { constant "$methodNode.name()" as String }
+                        argumentList { constant methodNode.name + "()" }
                     }
                 }
                 expression {
