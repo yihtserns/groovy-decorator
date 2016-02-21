@@ -6,6 +6,11 @@ class GqUtils {
 
     public static String TEMP_DIR = "GQTMP"
 
+    public static <T> T printExpressionToFile(String expression, T value) {
+        printToFile("$expression=$value")
+        return value
+    }
+
     public static void printToFile(Object value) {
         getGqFile().append("$value\n")
     }

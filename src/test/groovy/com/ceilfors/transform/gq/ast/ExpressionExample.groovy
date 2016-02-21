@@ -1,5 +1,7 @@
 package com.ceilfors.transform.gq.ast
 
+import static com.ceilfors.transform.gq.GqSupport.gq
+
 /**
  * @author ceilfors
  */

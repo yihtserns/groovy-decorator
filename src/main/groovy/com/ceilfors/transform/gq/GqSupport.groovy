@@ -1,15 +1,13 @@
 package com.ceilfors.transform.gq
+
 /**
  * @author ceilfors
  */
 class GqSupport {
 
-    def call(value) {
-        throw new IllegalStateException("Can't be called during runtime!")
-    }
+    static GqSupport gq = new GqSupport()
 
-    def call(String expression, Object value) {
-        GqUtils.printToFile "$expression=$value"
-        return value
+    def <T> T call(T value) {
+        throw new IllegalStateException("Can't be called during runtime!")
     }
 }

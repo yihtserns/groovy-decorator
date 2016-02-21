@@ -4,10 +4,7 @@ import com.ceilfors.transform.gq.GqSupport
 import com.ceilfors.transform.gq.GqUtils
 import org.codehaus.groovy.ast.*
 import org.codehaus.groovy.ast.builder.AstBuilder
-import org.codehaus.groovy.ast.expr.ArgumentListExpression
-import org.codehaus.groovy.ast.expr.ClosureExpression
-import org.codehaus.groovy.ast.expr.Expression
-import org.codehaus.groovy.ast.expr.MethodCallExpression
+import org.codehaus.groovy.ast.expr.*
 import org.codehaus.groovy.ast.stmt.BlockStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.control.CompilePhase
@@ -45,11 +42,12 @@ public class GqTransformation extends AbstractASTTransformation {
 
             @Override
             Expression transform(Expression expression) {
-                if (expression instanceof MethodCallExpression && expression.methodAsString == "gq") {
-                    // Traps normal method call and add expression text to the method call
-                    MethodCallExpression methodCallExpression = expression as MethodCallExpression
-                    ArgumentListExpression argumentListExpression = methodCallExpression.arguments as ArgumentListExpression
+                if (expression instanceof StaticMethodCallExpression && expression.ownerType.name == GqSupport.name) {
+                    // Traps normal method call to GqSupport and reroute to GqUtils
+                    def originalMethodCall = expression as StaticMethodCallExpression
+                    ArgumentListExpression argumentListExpression = originalMethodCall.arguments as ArgumentListExpression
                     argumentListExpression.expressions.add(0, constX(argumentListExpression.expressions.get(0).text.replace('(', '').replace(')', '')))
+                    return new StaticMethodCallExpression(ClassHelper.make(GqUtils), "printExpressionToFile", argumentListExpression)
                 }
                 return super.transform(expression)
             }
