@@ -6,13 +6,27 @@ import java.lang.annotation.ElementType
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
+import com.ceilfors.transform.gq.GqUtils
+import com.github.yihtserns.groovy.decorator.DecoratorClass
 
 /**
  * @author ceilfors
  */
 @Retention (RetentionPolicy.SOURCE)
-@Target ([ElementType.METHOD])
-@GroovyASTTransformationClass ("com.ceilfors.transform.gq.ast.GqTransformation")
+@Target (ElementType.METHOD)
+@DecoratorClass(Gq.Decorator)
+@GroovyASTTransformationClass (DecoratorClass.TRANSFORMER_CLASS)
 public @interface Gq {
 
+    public static final class Decorator {
+
+        static def call(Closure func) {
+            def result = func()
+            try {
+                GqUtils.printToFile("-> " + result)
+            } finally {
+                return result
+            }
+        }
+    }
 }
