@@ -5,7 +5,6 @@ import static com.ceilfors.transform.gq.GqSupport.gq
 /**
  * @author ceilfors
  */
-@Gq
 class ExpressionExample {
 
     def method() {

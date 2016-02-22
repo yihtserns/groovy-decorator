@@ -67,7 +67,8 @@ class GqTest extends Specification {
     // Should GcSupport object be a singleton that's imported
     // Rename GqTransformation to GqASTTransformation to follow standard
     // Remove ast package as it's a useless layer.
-
+    // Use MethodClosure syntax to have better IDE support `GqUtils.&printToFile as MethodClosure`
+    // Merge GqSupport and @Gq so that it looks like Gq.gq and @Gq.T
 
     // --- Feature
     // Support resolving method argument value

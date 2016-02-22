@@ -11,7 +11,7 @@ import java.lang.annotation.Target
  * @author ceilfors
  */
 @Retention (RetentionPolicy.SOURCE)
-@Target ([ElementType.METHOD, ElementType.TYPE])
+@Target ([ElementType.METHOD])
 @GroovyASTTransformationClass ("com.ceilfors.transform.gq.ast.GqTransformation")
 public @interface Gq {
 
