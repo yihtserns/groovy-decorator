@@ -3,10 +3,10 @@ package com.ceilfors.transform.gq.ast
 /**
  * @author ceilfors
  */
-class SimpleExample {
+class GqExample {
 
     @Gq
-    int simple() {
+    int "return 5"() {
         5
     }
 }

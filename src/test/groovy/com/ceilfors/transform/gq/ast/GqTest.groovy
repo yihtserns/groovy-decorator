@@ -29,32 +29,35 @@ class GqTest extends Specification {
 
     def "Should write name of method with empty parameter"() {
         setup:
-        def example = newExample(SimpleExample)
+        def example = newExample(GqExample)
 
         when:
-        example.simple()
+        def result = example."return 5"()
 
         then:
-        GqUtils.gqFile.readLines().first().contains("simple()")
+        result == 5
+        GqUtils.gqFile.readLines().first().contains("return 5()")
     }
 
     def "Should write returned value"() {
         setup:
-        def example = newExample(SimpleExample)
+        def example = newExample(GqExample)
 
         when:
-        example.simple()
+        def result = example."return 5"()
 
         then:
+        result == 5
         GqUtils.gqFile.readLines().last().contains("-> 5")
     }
 
     def "Should write expression statement and the evaluated expression"() {
         setup:
-        def example = newExample(ExpressionExample)
+        def example = newExample(GqSupportExample)
+        println example.class.methods
 
         when:
-        def result = example.method()
+        def result = example."3 plus 5"()
 
         then:
         result == 8
@@ -64,7 +67,6 @@ class GqTest extends Specification {
 
     // --- Kludge
     // Groovy doc recommends CompileStatic for GqTransformation to make compilation quicker
-    // Should GcSupport object be a singleton that's imported
     // Rename GqTransformation to GqASTTransformation to follow standard
     // Remove ast package as it's a useless layer.
     // Use MethodClosure syntax to have better IDE support `GqUtils.&printToFile as MethodClosure`

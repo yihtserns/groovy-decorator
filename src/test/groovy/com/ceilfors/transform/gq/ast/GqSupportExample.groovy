@@ -5,9 +5,9 @@ import static com.ceilfors.transform.gq.GqSupport.gq
 /**
  * @author ceilfors
  */
-class ExpressionExample {
+class GqSupportExample {
 
-    def method() {
+    int "3 plus 5"() {
         gq(3 + 5)
     }
 }
