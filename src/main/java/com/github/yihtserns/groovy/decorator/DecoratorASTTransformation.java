@@ -20,12 +20,14 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.VariableScope;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
-import org.codehaus.groovy.ast.tools.GeneralUtils;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.closureX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
@@ -51,8 +53,9 @@ public class DecoratorASTTransformation implements ASTTransformation {
         ClosureExpression closuredOriginalCode = closureX(originalCode);
         closuredOriginalCode.setVariableScope(new VariableScope());
 
+        ArgumentListExpression decoratorMethodArgs = args(constX(method.getName()), closuredOriginalCode);
         Statement[] statements = {
-            returnS(callX(ClassHelper.make(decoratorClass.value()), "call", GeneralUtils.args(closuredOriginalCode)))
+            returnS(callX(ClassHelper.make(decoratorClass.value()), "call", decoratorMethodArgs))
         };
         method.setCode(new BlockStatement(statements, originalCode.getVariableScope()));
     }
