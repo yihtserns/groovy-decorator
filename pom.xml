@@ -113,7 +113,7 @@
 
                             So let's only add this after compilation is done.
                         -->
-                        <id>Register CamelScript Global AST Transformation</id>
+                        <id>Register Global AST Transformation</id>
                         <goals>
                             <goal>run</goal>
                         </goals>
