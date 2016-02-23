@@ -20,7 +20,7 @@ import groovy.transform.AnnotationCollector
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
-import com.github.yihtserns.groovy.decorator.Honorific.Decorator
+import com.github.yihtserns.groovy.decorator.ReturnParamNames.Decorator
 
 /**
  *
@@ -29,15 +29,12 @@ import com.github.yihtserns.groovy.decorator.Honorific.Decorator
 @Target(ElementType.METHOD)
 @DecoratorClass(Decorator)
 @GroovyASTTransformationClass(DecoratorClass.TRANSFORMER_CLASS)
-@interface Honorific {
+@interface ReturnParamNames {
 
     static class Decorator {
 
-        static def call(funcName, func, name2Args) {
-            def nameEntry = name2Args.entrySet()[0]
-            nameEntry.value = 'Mr. ' + nameEntry.value
-
-            return func(*name2Args.values().collect())
+        static def call(funcName, func, name2Arg) {
+            return name2Arg.keySet()
         }
     }
 }

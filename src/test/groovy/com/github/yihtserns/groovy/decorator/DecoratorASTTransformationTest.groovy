@@ -94,6 +94,22 @@ class DecoratorASTTransformationTest {
         assert instance.greet('Noel') == 'Hi Mr. Noel!?'
     }
 
+    @Test
+    public void 'can access parameter names'() {
+        def instance = toInstance("""package com.github.yihtserns.groovy.decorator
+
+            class Greeter {
+
+                @ReturnParamNames
+                String greet(String name, int count, boolean truth) {
+                    return 'Hi ' + name
+                }
+            }
+        """)
+
+        assert instance.greet('Noel', 3, true) == '[name, count, truth]'
+    }
+
     def toInstance(String classScript) {
         def clazz = cl.parseClass(classScript)
 
