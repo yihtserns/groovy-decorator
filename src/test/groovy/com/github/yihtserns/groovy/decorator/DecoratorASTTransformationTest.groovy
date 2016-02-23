@@ -22,10 +22,12 @@ import org.junit.Test
  * @author yihtserns
  */
 class DecoratorASTTransformationTest {
+
+    def cl = new GroovyClassLoader()
 	
     @Test
     void 'can decorate'() {
-        String classDecl = """package com.github.yihtserns.groovy.decorator
+        def instance = toInstance("""package com.github.yihtserns.groovy.decorator
 
             class Greeter {
             
@@ -34,11 +36,49 @@ class DecoratorASTTransformationTest {
                     return 'Hi'
                 }
             }
-        """
-        def cl = new GroovyClassLoader()
-        def instance = cl.parseClass(classDecl).newInstance()
+        """)
 
         assert instance.greet() == 'Hi!'
     }
-}
 
+    @Test
+    public void 'can decorate method with one param'() {
+        def instance = toInstance("""package com.github.yihtserns.groovy.decorator
+
+            class Greeter {
+
+                @Exclaim
+                String greet(String name) {
+                    return 'Hi ' + name
+                }
+            }
+        """)
+
+        assert instance.greet('Noel') == 'Hi Noel!'
+    }
+
+    @Test
+    public void 'can decorate method with three params'() {
+        def instance = toInstance("""package com.github.yihtserns.groovy.decorator
+
+            class Greeter {
+
+                @Exclaim
+                String greet(String name, int count) {\n\
+                    def list = []\n\
+                    count.times { list << 'Hi ' + name }\n\
+
+                    return list.join(' ')
+                }
+            }
+        """)
+
+        assert instance.greet('Noel', 3) == 'Hi Noel Hi Noel Hi Noel!'
+    }
+
+    def toInstance(String classScript) {
+        def clazz = cl.parseClass(classScript)
+
+        return clazz.newInstance()
+    }
+}

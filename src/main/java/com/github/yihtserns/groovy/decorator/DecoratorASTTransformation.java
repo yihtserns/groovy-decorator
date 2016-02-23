@@ -15,20 +15,25 @@
  */
 package com.github.yihtserns.groovy.decorator;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.MethodNode;
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.VariableScope;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.Statement;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.closureX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.ASTTransformation;
@@ -50,13 +55,23 @@ public class DecoratorASTTransformation implements ASTTransformation {
         MethodNode method = (MethodNode) astNodes[1];
         BlockStatement originalCode = (BlockStatement) method.getCode();
 
-        ClosureExpression closuredOriginalCode = closureX(originalCode);
+        ClosureExpression closuredOriginalCode = closureX(method.getParameters(), originalCode);
         closuredOriginalCode.setVariableScope(new VariableScope());
 
-        ArgumentListExpression decoratorMethodArgs = args(constX(method.getName()), closuredOriginalCode);
-        Statement[] statements = {
-            returnS(callX(ClassHelper.make(decoratorClass.value()), "call", decoratorMethodArgs))
-        };
-        method.setCode(new BlockStatement(statements, originalCode.getVariableScope()));
+        List<Expression> arguments = new ArrayList<Expression>();
+        arguments.add(constX(method.getName()));
+        arguments.add(closuredOriginalCode);
+        arguments.add(new ArrayExpression(ClassHelper.OBJECT_TYPE, toVars(method.getParameters())));
+
+        method.setCode(returnS(callX(classX(decoratorClass.value()), "call", args(arguments))));
+    }
+
+    private static List<Expression> toVars(Parameter[] parameters) {
+        List<Expression> variables = new ArrayList<Expression>();
+        for (Parameter parameter : parameters) {
+            variables.add(varX(parameter.getName()));
+        }
+
+        return variables;
     }
 }
