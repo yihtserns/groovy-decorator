@@ -57,15 +57,15 @@ public class DecoratorASTTransformation implements ASTTransformation {
         List<Expression> arguments = new ArrayList<Expression>();
         arguments.add(constX(method.getName()));
         arguments.add(closuredOriginalCode);
-        arguments.add(new ListExpression(toVars(method.getParameters())));
+        arguments.add(toVars(method.getParameters()));
 
         method.setCode(returnS(callX(classX(decoratorClass.value()), "call", args(arguments))));
     }
 
-    private static List<Expression> toVars(Parameter[] parameters) {
-        List<Expression> variables = new ArrayList<Expression>();
+    private static ListExpression toVars(Parameter[] parameters) {
+        ListExpression variables = new ListExpression();
         for (Parameter parameter : parameters) {
-            variables.add(varX(parameter.getName()));
+            variables.addExpression(varX(parameter.getName()));
         }
 
         return variables;
