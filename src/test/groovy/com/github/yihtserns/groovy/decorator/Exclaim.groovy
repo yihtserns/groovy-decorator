@@ -33,8 +33,8 @@ import com.github.yihtserns.groovy.decorator.Exclaim.Decorator
 
     static class Decorator {
 
-        static def call(String funcName, Closure func) {
-            return func() + '!'
+        static def call(funcName, func, args) {
+            return func(*args) + '!'
         }
     }
 }
