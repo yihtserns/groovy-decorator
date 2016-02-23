@@ -20,8 +20,8 @@ public @interface Gq {
 
     public static final class Decorator {
 
-        static def call(funcName, func, args) {
-            def result = func(*args)
+        static def call(funcName, func, name2Args) {
+            def result = func(*name2Args.values().collect())
             try {
                 GqUtils.printToFile(funcName + "()")
                 GqUtils.printToFile("-> " + result)

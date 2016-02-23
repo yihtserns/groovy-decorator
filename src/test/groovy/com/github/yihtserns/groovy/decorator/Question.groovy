@@ -33,8 +33,8 @@ import com.github.yihtserns.groovy.decorator.Question.Decorator
 
     static class Decorator {
 
-        static def call(funcName, func, args) {
-            return func(*args) + '?'
+        static def call(funcName, func, name2Args) {
+            return func(*name2Args.values().collect()) + '?'
         }
     }
 }
