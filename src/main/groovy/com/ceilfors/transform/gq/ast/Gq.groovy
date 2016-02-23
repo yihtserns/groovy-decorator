@@ -21,9 +21,11 @@ public @interface Gq {
     public static final class Decorator {
 
         static def call(funcName, func, name2Args) {
-            def result = func(*name2Args.values().collect())
+            def args = name2Args.values().collect()
+            def result = func(*args)
+
             try {
-                GqUtils.printToFile(funcName + "()")
+                GqUtils.printToFile(funcName + "(${args.join(', ')})")
                 GqUtils.printToFile("-> " + result)
             } finally {
                 return result
