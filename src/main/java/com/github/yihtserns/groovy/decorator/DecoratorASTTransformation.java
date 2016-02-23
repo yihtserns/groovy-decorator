@@ -26,7 +26,6 @@ import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
@@ -53,9 +52,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
         DecoratorClass decoratorClass = (DecoratorClass) annotation.getClassNode().getTypeClass().getAnnotation(DecoratorClass.class);
 
         MethodNode method = (MethodNode) astNodes[1];
-        BlockStatement originalCode = (BlockStatement) method.getCode();
-
-        ClosureExpression closuredOriginalCode = closureX(method.getParameters(), originalCode);
+        ClosureExpression closuredOriginalCode = closureX(method.getParameters(), method.getCode());
         closuredOriginalCode.setVariableScope(new VariableScope());
 
         List<Expression> arguments = new ArrayList<Expression>();
