@@ -19,13 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.VariableScope;
-import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.ListExpression;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
@@ -58,7 +57,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
         List<Expression> arguments = new ArrayList<Expression>();
         arguments.add(constX(method.getName()));
         arguments.add(closuredOriginalCode);
-        arguments.add(new ArrayExpression(ClassHelper.OBJECT_TYPE, toVars(method.getParameters())));
+        arguments.add(new ListExpression(toVars(method.getParameters())));
 
         method.setCode(returnS(callX(classX(decoratorClass.value()), "call", args(arguments))));
     }
