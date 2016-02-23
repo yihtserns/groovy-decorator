@@ -27,7 +27,7 @@ class GqTest extends Specification {
         return clazz.newInstance() as T
     }
 
-    def "Should write name of method with empty parameter"() {
+    def "Should write the name of a method with empty parameter"() {
         setup:
         def example = newExample(GqExample)
 
@@ -39,7 +39,19 @@ class GqTest extends Specification {
         GqUtils.gqFile.readLines().first().contains("return 5()")
     }
 
-    def "Should write returned value"() {
+    def "Should write the arguments of a method call"() {
+        setup:
+        def example = newExample(GqExample)
+
+        when:
+        def result = example.add(3, 3)
+
+        then:
+        result == 6
+        GqUtils.gqFile.readLines().first().contains("add(3, 3)")
+    }
+
+    def "Should write the returned value of a method call"() {
         setup:
         def example = newExample(GqExample)
 
@@ -54,7 +66,6 @@ class GqTest extends Specification {
     def "Should write expression statement and the evaluated expression"() {
         setup:
         def example = newExample(GqSupportExample)
-        println example.class.methods
 
         when:
         def result = example."3 plus 5"()
@@ -71,9 +82,10 @@ class GqTest extends Specification {
     // Remove ast package as it's a useless layer.
     // Use MethodClosure syntax to have better IDE support `GqUtils.&printToFile as MethodClosure`
     // Merge GqSupport and @Gq so that it looks like Gq.gq and @Gq.T
+    // gString verbatimText is not implemented. This affects decompilation but not runtime. e.g. ${methodNode.name}(parameters) instead of ${method.name)($1, $2, $3)
 
     // --- Feature
     // Support resolving method argument value
-    // @Gq introduces result variable which is a pretty common variable name. Make it unique.
+    // @Gq introduces result variable which is a pretty common variable name. Make it unique? Potentially we don't have this problem as we are controlling the closure variable scope
 
 }

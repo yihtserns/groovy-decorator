@@ -9,4 +9,9 @@ class GqExample {
     int "return 5"() {
         5
     }
+
+    @Gq
+    int add(int x, int y) {
+        return x + y
+    }
 }
