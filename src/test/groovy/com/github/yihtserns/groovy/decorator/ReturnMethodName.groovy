@@ -16,10 +16,8 @@
 
 package com.github.yihtserns.groovy.decorator
 
-import groovy.transform.AnnotationCollector
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
-import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 /**
  *
@@ -27,7 +25,6 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
  */
 @Target(ElementType.METHOD)
 @DecoratorClass(ReturnMethodName.Decorator)
-@GroovyASTTransformationClass(DecoratorClass.TRANSFORMER_CLASS)
 @interface ReturnMethodName {
 
     static class Decorator {

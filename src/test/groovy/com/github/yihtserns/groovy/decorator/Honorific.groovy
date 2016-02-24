@@ -16,19 +16,15 @@
 
 package com.github.yihtserns.groovy.decorator
 
-import groovy.transform.AnnotationCollector
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
-import org.codehaus.groovy.transform.GroovyASTTransformationClass
-import com.github.yihtserns.groovy.decorator.Honorific.Decorator
 
 /**
  *
  * @author yihtserns
  */
 @Target(ElementType.METHOD)
-@DecoratorClass(Decorator)
-@GroovyASTTransformationClass(DecoratorClass.TRANSFORMER_CLASS)
+@DecoratorClass(Honorific.Decorator)
 @interface Honorific {
 
     static class Decorator {

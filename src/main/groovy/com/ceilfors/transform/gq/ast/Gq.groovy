@@ -12,10 +12,8 @@ import com.github.yihtserns.groovy.decorator.DecoratorClass
 /**
  * @author ceilfors
  */
-@Retention (RetentionPolicy.SOURCE)
 @Target (ElementType.METHOD)
 @DecoratorClass(Gq.Decorator)
-@GroovyASTTransformationClass (DecoratorClass.TRANSFORMER_CLASS)
 public @interface Gq {
 
     public static final class Decorator {
