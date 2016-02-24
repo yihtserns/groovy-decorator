@@ -20,20 +20,21 @@ import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import static org.codehaus.groovy.ast.ClassHelper.make;
+import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.VariableScope;
+import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.closureX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.returnS;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
+import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.ReturnStatement;
+import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.ASTTransformation;
@@ -72,5 +73,41 @@ public class DecoratorASTTransformation implements ASTTransformation {
         }
 
         return name2Vars;
+    }
+
+    private static ClosureExpression closureX(Parameter[] parameters, Statement body) {
+        return new ClosureExpression(parameters, body);
+    }
+
+    private static ConstantExpression constX(String value) {
+        return new ConstantExpression(value);
+    }
+
+    private static ArgumentListExpression args(Expression... expressions) {
+        return new ArgumentListExpression(expressions);
+    }
+
+    private static ArgumentListExpression args(List<Expression> expressions) {
+        return new ArgumentListExpression(expressions);
+    }
+
+    private static ConstructorCallExpression ctorX(ClassNode type, ArgumentListExpression args) {
+        return new ConstructorCallExpression(type, args);
+    }
+
+    private static ClassExpression classX(Class type) {
+        return new ClassExpression(make(type));
+    }
+
+    private static MethodCallExpression callX(ClassExpression type, String methodName, ArgumentListExpression args) {
+        return new MethodCallExpression(type, methodName, args);
+    }
+
+    private static ReturnStatement returnS(Expression expression) {
+        return new ReturnStatement(expression);
+    }
+
+    private static VariableExpression varX(String variableName) {
+        return new VariableExpression(variableName);
     }
 }

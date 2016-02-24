@@ -18,8 +18,9 @@ package com.github.yihtserns.groovy.decorator;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import org.codehaus.groovy.ast.ClassHelper;
+import static org.codehaus.groovy.ast.ClassHelper.make;
 import org.codehaus.groovy.ast.ClassNode;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
+import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.ASTTransformation;
@@ -42,5 +43,9 @@ public class AutoAnnotateASTTransformation implements ASTTransformation {
 
         ClassNode classNode = (ClassNode) astNodes[1];
         classNode.addAnnotation(astTransformerClass);
+    }
+
+    private static ClassExpression classX(Class type) {
+        return new ClassExpression(make(type));
     }
 }
