@@ -18,6 +18,7 @@ package com.github.yihtserns.groovy.decorator;
 import groovy.lang.Closure;
 
 /**
+ * Since I can't set any property to a {@code Closure}, I use this wrapper class to do it.
  *
  * @author yihtserns
  */
@@ -31,10 +32,17 @@ public class Function {
         this.name = name;
     }
 
+    /**
+     * @param args will be passed to underlying {@code Closure}
+     * @return whatever that is returned by the underlying {@code Closure}
+     */
     public Object call(Object... args) {
         return delegate.call(args);
     }
 
+    /**
+     * @return method name
+     */
     public String getName() {
         return name;
     }

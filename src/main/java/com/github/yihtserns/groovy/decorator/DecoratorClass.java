@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
 import org.codehaus.groovy.transform.GroovyASTTransformationClass;
 
 /**
- *
+ * @see #value()
  * @author yihtserns
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -30,5 +30,12 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass;
 @GroovyASTTransformationClass(classes = AutoAnnotateASTTransformation.class)
 public @interface DecoratorClass {
 
+    /**
+     * @return class that contains a static method of {@code call(Closure func, Object[] args)}.
+     * <ul>
+     * <li>{@code func} is the original method body</li>
+     * <li>{@code args} is the arguments passed in by the method caller</li>
+     * </ul>
+     */
     Class<?> value();
 }
