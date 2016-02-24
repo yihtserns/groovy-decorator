@@ -13,30 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.github.yihtserns.groovy.decorator;
 
-package com.github.yihtserns.groovy.decorator
-
-import groovy.transform.AnnotationCollector
-import java.lang.annotation.Target
-import java.lang.annotation.ElementType
-import org.codehaus.groovy.transform.GroovyASTTransformationClass
-import com.github.yihtserns.groovy.decorator.Honorific.Decorator
+import groovy.lang.Closure;
 
 /**
  *
  * @author yihtserns
  */
-@Target(ElementType.METHOD)
-@DecoratorClass(Decorator)
-@GroovyASTTransformationClass(DecoratorClass.TRANSFORMER_CLASS)
-@interface Honorific {
+public class Function {
 
-    static class Decorator {
+    private String name;
+    private Closure delegate;
 
-        static def call(func, args) {
-            args[0] = 'Mr. ' + args[0]
+    public Function(Closure delegate, String name) {
+        this.delegate = delegate;
+        this.name = name;
+    }
 
-            return func(*args)
-        }
+    public Object call(Object... args) {
+        return delegate.call(args);
+    }
+
+    public String getName() {
+        return name;
     }
 }

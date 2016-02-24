@@ -20,23 +20,20 @@ import groovy.transform.AnnotationCollector
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
-import com.github.yihtserns.groovy.decorator.Honorific.Decorator
 
 /**
  *
  * @author yihtserns
  */
 @Target(ElementType.METHOD)
-@DecoratorClass(Decorator)
+@DecoratorClass(ReturnMethodName.Decorator)
 @GroovyASTTransformationClass(DecoratorClass.TRANSFORMER_CLASS)
-@interface Honorific {
+@interface ReturnMethodName {
 
     static class Decorator {
 
         static def call(func, args) {
-            args[0] = 'Mr. ' + args[0]
-
-            return func(*args)
+            return func.name
         }
     }
 }

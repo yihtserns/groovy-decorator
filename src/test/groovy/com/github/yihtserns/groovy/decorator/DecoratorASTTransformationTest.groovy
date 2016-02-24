@@ -94,6 +94,31 @@ class DecoratorASTTransformationTest {
         assert instance.greet('Noel') == 'Hi Mr. Noel!?'
     }
 
+    @Test
+    public void 'can get method name'() {
+        def instance = toInstance("""package com.github.yihtserns.groovy.decorator
+
+            class Greeter {
+
+                @ReturnMethodName
+                String greet(String name) {
+                }
+
+                @ReturnMethodName
+                String farewell(String name, int count) {
+                }
+
+                @ReturnMethodName
+                String bid() {
+                }
+            }
+        """)
+
+        assert instance.greet('Noel') == 'greet'
+        assert instance.farewell('Noel', 3) == 'farewell'
+        assert instance.bid() == 'bid'
+    }
+
     def toInstance(String classScript) {
         def clazz = cl.parseClass(classScript)
 
