@@ -23,7 +23,6 @@ import java.lang.annotation.ElementType
  *
  * @author yihtserns
  */
-@Target(ElementType.METHOD)
 @DecoratorClass(Honorific.Decorator)
 @interface Honorific {
 

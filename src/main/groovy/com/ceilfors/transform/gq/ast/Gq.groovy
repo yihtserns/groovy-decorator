@@ -12,7 +12,6 @@ import com.github.yihtserns.groovy.decorator.DecoratorClass
 /**
  * @author ceilfors
  */
-@Target (ElementType.METHOD)
 @DecoratorClass(Gq.Decorator)
 public @interface Gq {
 
