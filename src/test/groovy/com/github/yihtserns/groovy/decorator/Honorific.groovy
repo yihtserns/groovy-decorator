@@ -33,11 +33,10 @@ import com.github.yihtserns.groovy.decorator.Honorific.Decorator
 
     static class Decorator {
 
-        static def call(funcName, func, name2Args) {
-            def nameEntry = name2Args.entrySet()[0]
-            nameEntry.value = 'Mr. ' + nameEntry.value
+        static def call(funcName, func, args) {
+            args[0] = 'Mr. ' + args[0]
 
-            return func(*name2Args.values().collect())
+            return func(*args)
         }
     }
 }

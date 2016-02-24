@@ -20,8 +20,7 @@ public @interface Gq {
 
     public static final class Decorator {
 
-        static def call(funcName, func, name2Args) {
-            def args = name2Args.values().collect()
+        static def call(funcName, func, args) {
             def result = func(*args)
 
             try {

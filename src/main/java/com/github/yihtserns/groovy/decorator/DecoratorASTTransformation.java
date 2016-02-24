@@ -24,7 +24,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.MapExpression;
+import org.codehaus.groovy.ast.expr.ListExpression;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
@@ -57,16 +57,16 @@ public class DecoratorASTTransformation implements ASTTransformation {
         List<Expression> arguments = new ArrayList<Expression>();
         arguments.add(constX(method.getName()));
         arguments.add(closuredOriginalCode);
-        arguments.add(toName2Vars(method.getParameters()));
+        arguments.add(toVars(method.getParameters()));
 
         method.setCode(returnS(callX(classX(decoratorClass.value()), "call", args(arguments))));
     }
 
-    private static MapExpression toName2Vars(Parameter[] parameters) {
-        MapExpression name2Vars = new MapExpression();
+    private static ListExpression toVars(Parameter[] parameters) {
+        ListExpression name2Vars = new ListExpression();
         for (Parameter parameter : parameters) {
             String paramName = parameter.getName();
-            name2Vars.addMapEntryExpression(constX(paramName), varX(paramName));
+            name2Vars.addExpression(varX(paramName));
         }
 
         return name2Vars;
