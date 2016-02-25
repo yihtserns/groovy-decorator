@@ -25,7 +25,7 @@ import java.util.List;
 import org.codehaus.groovy.ast.AnnotatedNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import static org.codehaus.groovy.ast.ClassHelper.make;
-import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.AnnotationCollectorTransform;
 import org.codehaus.groovy.transform.GroovyASTTransformationClass;
@@ -61,7 +61,7 @@ public @interface MethodDecorator {
                 AnnotatedNode aliasAnnotated,
                 SourceUnit source) {
             AnnotationNode astTransformClass = new AnnotationNode(make(GroovyASTTransformationClass.class));
-            astTransformClass.addMember("classes", new ClassExpression(make(DecoratorASTTransformation.class)));
+            astTransformClass.addMember("value", new ConstantExpression(DecoratorASTTransformation.class.getName()));
 
             return Arrays.asList(methodDecorator, astTransformClass);
         }

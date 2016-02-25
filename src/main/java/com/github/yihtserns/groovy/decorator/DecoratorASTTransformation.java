@@ -51,8 +51,6 @@ public class DecoratorASTTransformation implements ASTTransformation {
     public void visit(ASTNode[] astNodes, final SourceUnit sourceUnit) {
         AnnotationNode annotation = (AnnotationNode) astNodes[0];
 
-        MethodDecorator methodDecorator = (MethodDecorator) annotation.getClassNode().getTypeClass().getAnnotation(MethodDecorator.class);
-
         MethodNode method = (MethodNode) astNodes[1];
         ClosureExpression closuredOriginalCode = closureX(method.getParameters(), method.getCode());
         closuredOriginalCode.setVariableScope(new VariableScope());
@@ -62,10 +60,10 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 make(Function.class), args(closuredOriginalCode, constX(method.getName()))));
         arguments.add(toVars(method.getParameters()));
 
-        ConstructorCallExpression newDecoratingClosure = ctorX(
-                make(methodDecorator.value()),
-                args(constX(null), classX(ClassNode.THIS)));
-        method.setCode(returnS(callX(newDecoratingClosure, "call", args(arguments))));
+        AnnotationNode methodDecoratorAnno = annotation.getClassNode().getAnnotations(make(MethodDecorator.class)).get(0);
+        Expression decoratingClosure = methodDecoratorAnno.getMember("value");
+
+        method.setCode(returnS(callX(decoratingClosure, "call", args(arguments))));
     }
 
     private static ListExpression toVars(Parameter[] parameters) {
