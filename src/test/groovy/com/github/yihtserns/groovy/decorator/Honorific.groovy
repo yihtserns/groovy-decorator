@@ -23,15 +23,10 @@ import java.lang.annotation.ElementType
  *
  * @author yihtserns
  */
-@DecoratorClass(Honorific.Decorator)
+@DecoratorClass({ func, args ->
+    args[0] = 'Mr. ' + args[0]
+
+    return func(*args)}
+)
 @interface Honorific {
-
-    static class Decorator {
-
-        static def call(func, args) {
-            args[0] = 'Mr. ' + args[0]
-
-            return func(*args)
-        }
-    }
 }

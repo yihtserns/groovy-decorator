@@ -23,13 +23,6 @@ import java.lang.annotation.ElementType
  *
  * @author yihtserns
  */
-@DecoratorClass(ReturnMethodName.Decorator)
+@DecoratorClass({ func, args -> func.name })
 @interface ReturnMethodName {
-
-    static class Decorator {
-
-        static def call(func, args) {
-            return func.name
-        }
-    }
 }

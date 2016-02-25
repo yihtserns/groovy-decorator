@@ -62,7 +62,10 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 make(Function.class), args(closuredOriginalCode, constX(method.getName()))));
         arguments.add(toVars(method.getParameters()));
 
-        method.setCode(returnS(callX(classX(decoratorClass.value()), "call", args(arguments))));
+        ConstructorCallExpression newDecoratingClosure = ctorX(
+                make(decoratorClass.value()),
+                args(constX(null), classX(ClassNode.THIS)));
+        method.setCode(returnS(callX(newDecoratingClosure, "call", args(arguments))));
     }
 
     private static ListExpression toVars(Parameter[] parameters) {
@@ -79,7 +82,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
         return new ClosureExpression(parameters, body);
     }
 
-    private static ConstantExpression constX(String value) {
+    private static ConstantExpression constX(Object value) {
         return new ConstantExpression(value);
     }
 
@@ -99,7 +102,11 @@ public class DecoratorASTTransformation implements ASTTransformation {
         return new ClassExpression(make(type));
     }
 
-    private static MethodCallExpression callX(ClassExpression type, String methodName, ArgumentListExpression args) {
+    private static ClassExpression classX(ClassNode type) {
+        return new ClassExpression(type);
+    }
+
+    private static MethodCallExpression callX(Expression type, String methodName, ArgumentListExpression args) {
         return new MethodCallExpression(type, methodName, args);
     }
 

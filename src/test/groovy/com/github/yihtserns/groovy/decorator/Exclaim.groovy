@@ -23,13 +23,6 @@ import java.lang.annotation.ElementType
  *
  * @author yihtserns
  */
-@DecoratorClass(Exclaim.Decorator)
+@DecoratorClass({ func, args -> func(*args) + '!' })
 @interface Exclaim {
-
-    static class Decorator {
-
-        static def call(func, args) {
-            return func(*args) + '!'
-        }
-    }
 }
