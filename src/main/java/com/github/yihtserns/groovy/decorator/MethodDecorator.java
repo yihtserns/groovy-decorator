@@ -36,8 +36,8 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
-@AnnotationCollector(processor = "com.github.yihtserns.groovy.decorator.DecoratorClass$AutoAnnotateTransform")
-public @interface DecoratorClass {
+@AnnotationCollector(processor = "com.github.yihtserns.groovy.decorator.MethodDecorator$AutoAnnotateTransform")
+public @interface MethodDecorator {
 
     /**
      * @return class that contains a static method of {@code call(Closure func, Object[] args)}.
@@ -50,20 +50,20 @@ public @interface DecoratorClass {
 
     /**
      * Automatically annotate {@code @}{@link GroovyASTTransformationClass}(classes = {@link DecoratorASTTransformation}.class)
-     * on annotation that is annotated with {@code @}{@link DecoratorClass}, so users don't have to.
+     * on annotation that is annotated with {@code @}{@link MethodDecorator}, so users don't have to.
      */
     public static class AutoAnnotateTransform extends AnnotationCollectorTransform {
 
         @Override
         public List<AnnotationNode> visit(
                 AnnotationNode annotationCollector,
-                AnnotationNode decoratorClass,
+                AnnotationNode methodDecorator,
                 AnnotatedNode aliasAnnotated,
                 SourceUnit source) {
             AnnotationNode astTransformClass = new AnnotationNode(make(GroovyASTTransformationClass.class));
             astTransformClass.addMember("classes", new ClassExpression(make(DecoratorASTTransformation.class)));
 
-            return Arrays.asList(decoratorClass, astTransformClass);
+            return Arrays.asList(methodDecorator, astTransformClass);
         }
     }
 }

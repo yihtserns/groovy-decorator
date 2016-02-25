@@ -23,6 +23,6 @@ import java.lang.annotation.ElementType
  *
  * @author yihtserns
  */
-@DecoratorClass({ func, args -> func.name })
+@MethodDecorator({ func, args -> func.name })
 @interface ReturnMethodName {
 }

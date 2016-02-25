@@ -23,6 +23,6 @@ import java.lang.annotation.ElementType
  *
  * @author yihtserns
  */
-@DecoratorClass({ func, args -> func(*args) + '!' })
+@MethodDecorator({ func, args -> func(*args) + '!' })
 @interface Exclaim {
 }

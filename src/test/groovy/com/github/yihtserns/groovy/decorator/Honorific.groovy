@@ -23,7 +23,7 @@ import java.lang.annotation.ElementType
  *
  * @author yihtserns
  */
-@DecoratorClass({ func, args ->
+@MethodDecorator({ func, args ->
     args[0] = 'Mr. ' + args[0]
 
     return func(*args)}
