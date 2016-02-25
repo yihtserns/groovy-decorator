@@ -15,10 +15,19 @@
  */
 package com.github.yihtserns.groovy.decorator;
 
+import groovy.transform.AnnotationCollector;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Arrays;
+import java.util.List;
+import org.codehaus.groovy.ast.AnnotatedNode;
+import org.codehaus.groovy.ast.AnnotationNode;
+import static org.codehaus.groovy.ast.ClassHelper.make;
+import org.codehaus.groovy.ast.expr.ClassExpression;
+import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.transform.AnnotationCollectorTransform;
 import org.codehaus.groovy.transform.GroovyASTTransformationClass;
 
 /**
@@ -27,7 +36,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
-@GroovyASTTransformationClass(classes = AutoAnnotateASTTransformation.class)
+@AnnotationCollector(processor = "com.github.yihtserns.groovy.decorator.DecoratorClass$AutoAnnotateTransform")
 public @interface DecoratorClass {
 
     /**
@@ -38,4 +47,23 @@ public @interface DecoratorClass {
      * </ul>
      */
     Class<?> value();
+
+    /**
+     * Automatically annotate {@code @}{@link GroovyASTTransformationClass}(classes = {@link DecoratorASTTransformation}.class)
+     * on annotation that is annotated with {@code @}{@link DecoratorClass}, so users don't have to.
+     */
+    public static class AutoAnnotateTransform extends AnnotationCollectorTransform {
+
+        @Override
+        public List<AnnotationNode> visit(
+                AnnotationNode annotationCollector,
+                AnnotationNode decoratorClass,
+                AnnotatedNode aliasAnnotated,
+                SourceUnit source) {
+            AnnotationNode astTransformClass = new AnnotationNode(make(GroovyASTTransformationClass.class));
+            astTransformClass.addMember("classes", new ClassExpression(make(DecoratorASTTransformation.class)));
+
+            return Arrays.asList(decoratorClass, astTransformClass);
+        }
+    }
 }
