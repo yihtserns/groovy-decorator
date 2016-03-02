@@ -13,16 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.github.yihtserns.groovy.deco;
 
-package com.github.yihtserns.groovy.decorator
-
-import java.lang.annotation.Target
-import java.lang.annotation.ElementType
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- *
+ * @see #value()
  * @author yihtserns
  */
-@MethodDecorator({ func, args -> func(*args) + '?'})
-@interface Question {
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.ANNOTATION_TYPE)
+public @interface MethodDecorator {
+
+    /**
+     * @return class that contains a static method of {@code call(Closure func, Object[] args)}.
+     * <ul>
+     * <li>{@code func} is the original method body</li>
+     * <li>{@code args} is the arguments passed in by the method caller</li>
+     * </ul>
+     */
+    Class<?> value();
 }

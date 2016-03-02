@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-package com.github.yihtserns.groovy.decorator
+package com.github.yihtserns.groovy.deco
 
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
+import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 /**
- * The class name is supposed to be Greeter3, but having that name causes it to skip AST transformation!
  *
  * @author yihtserns
  */
-class Greeter31 {
-
-    @Exclaim
-    String greet(String name, int count) {
-        def list = []
-        count.times { list << 'Hi ' + name }
-
-        return list.join(' ')
-    }
+@MethodDecorator({ func, args -> func.name })
+@GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
+@interface ReturnMethodName {
 }

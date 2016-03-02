@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 
-package com.github.yihtserns.groovy.decorator
+package com.github.yihtserns.groovy.deco
 
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
+import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 /**
+ *
  * @author yihtserns
  */
-class Greeter5 {
+@MethodDecorator({ func, args ->
+    args[0] = 'Mr. ' + args[0]
 
-    @ReturnMethodName
-    String greet(String name) {
-    }
-
-    @ReturnMethodName
-    String farewell(String name, int count) {
-    }
-
-    @ReturnMethodName
-    String bid() {
-    }
+    return func(*args)}
+)
+@GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
+@interface Honorific {
 }

@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.yihtserns.groovy.decorator;
+package com.github.yihtserns.groovy.deco;
 
 import java.util.ArrayList;
 import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import org.codehaus.groovy.ast.ClassHelper;
 import static org.codehaus.groovy.ast.ClassHelper.make;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -33,6 +34,7 @@ import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilePhase;
@@ -50,8 +52,8 @@ public class DecoratorASTTransformation implements ASTTransformation {
     @Override
     public void visit(ASTNode[] astNodes, final SourceUnit sourceUnit) {
         AnnotationNode annotation = (AnnotationNode) astNodes[0];
-
         MethodNode method = (MethodNode) astNodes[1];
+
         ClosureExpression closuredOriginalCode = closureX(method.getParameters(), method.getCode());
         closuredOriginalCode.setVariableScope(new VariableScope());
 
@@ -60,10 +62,16 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 make(Function.class), args(closuredOriginalCode, constX(method.getName()))));
         arguments.add(toVars(method.getParameters()));
 
-        AnnotationNode methodDecoratorAnno = annotation.getClassNode().getAnnotations(make(MethodDecorator.class)).get(0);
-        Expression decoratingClosure = methodDecoratorAnno.getMember("value");
+        AnnotationNode methodDecorator = annotation.getClassNode().getAnnotations(make(MethodDecorator.class)).get(0);
+        Expression closure = methodDecorator.getMember("value");
+        closure = callX(closure, "newInstance", args(classX(ClassNode.THIS), classX(ClassNode.THIS)));
 
-        method.setCode(returnS(callX(decoratingClosure, "call", args(arguments))));
+        Expression newMethodBody = callX(closure, "call", args(arguments));
+        if (method.getReturnType() != ClassHelper.VOID_TYPE) {
+            method.setCode(returnS(newMethodBody));
+        } else {
+            method.setCode(new ExpressionStatement(newMethodBody));
+        }
     }
 
     private static ListExpression toVars(Parameter[] parameters) {
