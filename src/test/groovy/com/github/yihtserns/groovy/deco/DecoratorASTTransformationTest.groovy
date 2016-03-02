@@ -17,6 +17,7 @@
 package com.github.yihtserns.groovy.deco
 
 import org.junit.Test
+import static org.junit.Assert.fail
 
 /**
  * @author yihtserns
@@ -117,6 +118,26 @@ class DecoratorASTTransformationTest {
         assert instance.greet('Noel') == 'greet'
         assert instance.farewell('Noel', 3) == 'farewell'
         assert instance.bid() == 'bid'
+    }
+
+    @Test
+    public void 'should throw when decorating annotation not annotated with @MethodDecorator'() {
+        try {
+            toInstance("""package com.github.yihtserns.groovy.deco
+
+                class Greeter {
+
+                    @WithoutMethodDecorator
+                    String greet(String name) {
+                        return 'Hi ' + name
+                    }
+                }
+            """)
+            fail("Should throw exception")
+        } catch (e) {
+            assert e.message.contains("Annotation to decorate method must be annotated with com.github.yihtserns.groovy.deco.MethodDecorator."
+            + " com.github.yihtserns.groovy.deco.WithoutMethodDecorator lacks this annotation.")
+        }
     }
 
     def toInstance(String classScript) {

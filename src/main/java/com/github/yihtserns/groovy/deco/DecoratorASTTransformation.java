@@ -39,6 +39,7 @@ import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 
@@ -62,7 +63,16 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 make(Function.class), args(closuredOriginalCode, constX(method.getName()))));
         arguments.add(toVars(method.getParameters()));
 
-        AnnotationNode methodDecorator = annotation.getClassNode().getAnnotations(make(MethodDecorator.class)).get(0);
+        List<AnnotationNode> methodDecorators = annotation.getClassNode().getAnnotations(make(MethodDecorator.class));
+        if (methodDecorators.isEmpty()) {
+            String msg = String.format("Annotation to decorate method must be annotated with %s. %s lacks this annotation.",
+                    MethodDecorator.class.getName(),
+                    annotation.getClassNode().getName());
+            sourceUnit.getErrorCollector().addError(new SimpleMessage(msg, sourceUnit));
+            return;
+        }
+
+        AnnotationNode methodDecorator = methodDecorators.get(0);
         Expression closure = methodDecorator.getMember("value");
         closure = callX(closure, "newInstance", args(classX(ClassNode.THIS), classX(ClassNode.THIS)));
 
