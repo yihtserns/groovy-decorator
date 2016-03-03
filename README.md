@@ -1,6 +1,6 @@
 Groovy Decorator
 ================
-Python-inspired decorator for Groovy.
+Python-inspired method decorator for Groovy.
 
 Tested on
 ---------
