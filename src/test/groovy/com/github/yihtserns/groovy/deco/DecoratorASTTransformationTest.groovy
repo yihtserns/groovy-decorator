@@ -136,7 +136,34 @@ class DecoratorASTTransformationTest {
             fail("Should throw exception")
         } catch (e) {
             assert e.message.contains("Annotation to decorate method must be annotated with com.github.yihtserns.groovy.deco.MethodDecorator."
-            + " com.github.yihtserns.groovy.deco.WithoutMethodDecorator lacks this annotation.")
+                + " com.github.yihtserns.groovy.deco.WithoutMethodDecorator lacks this annotation.")
+        }
+    }
+
+    @Test
+    public void 'stack trace should show original location of code'() {
+        def instance = toInstance("""package com.github.yihtserns.groovy.deco
+
+            class Greeter {
+
+                @Exclaim
+                String greet(String name) {
+                    String msg = "Raising error for name: " + name
+                    throw new RuntimeException(msg)
+                }
+            }
+        """)
+
+        try {
+            instance.greet("Noel")
+            fail("Should throw exception")
+        } catch (ex) {
+            def sanitizedEx = org.codehaus.groovy.runtime.StackTraceUtils.deepSanitize(ex)
+            sanitizedEx.stackTrace[0].with {
+                assert it.className == 'com.github.yihtserns.groovy.deco.Greeter'
+                assert it.methodName == 'greet'
+                assert it.lineNumber == 8
+            }
         }
     }
 

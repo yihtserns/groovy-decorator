@@ -16,30 +16,34 @@
 package com.github.yihtserns.groovy.deco;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
-import org.codehaus.groovy.ast.ClassHelper;
 import static org.codehaus.groovy.ast.ClassHelper.make;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
+import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
-import org.codehaus.groovy.ast.stmt.ReturnStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SimpleMessage;
+import org.codehaus.groovy.syntax.Token;
+import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 
@@ -50,18 +54,12 @@ import org.codehaus.groovy.transform.GroovyASTTransformation;
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 public class DecoratorASTTransformation implements ASTTransformation {
 
+    private static final Token EQUAL_TOKEN = Token.newSymbol(Types.EQUAL, -1, -1);
+
     @Override
     public void visit(ASTNode[] astNodes, final SourceUnit sourceUnit) {
         AnnotationNode annotation = (AnnotationNode) astNodes[0];
         MethodNode method = (MethodNode) astNodes[1];
-
-        ClosureExpression closuredOriginalCode = closureX(method.getParameters(), method.getCode());
-        closuredOriginalCode.setVariableScope(new VariableScope());
-
-        List<Expression> arguments = new ArrayList<Expression>();
-        arguments.add(ctorX(
-                make(Function.class), args(closuredOriginalCode, constX(method.getName()))));
-        arguments.add(toVars(method.getParameters()));
 
         List<AnnotationNode> methodDecorators = annotation.getClassNode().getAnnotations(make(MethodDecorator.class));
         if (methodDecorators.isEmpty()) {
@@ -73,15 +71,43 @@ public class DecoratorASTTransformation implements ASTTransformation {
         }
 
         AnnotationNode methodDecorator = methodDecorators.get(0);
-        Expression closure = methodDecorator.getMember("value");
-        closure = callX(closure, "newInstance", args(classX(ClassNode.THIS), classX(ClassNode.THIS)));
+        Expression decorate = methodDecorator.getMember("value");
+        decorate = callX(decorate, "newInstance", args(classX(ClassNode.THIS), classX(ClassNode.THIS)));
+        VariableExpression decorateVar = varX("decorate");
+        decorateVar.setClosureSharedVariable(true);
+        DeclarationExpression decl0 = declareX(
+                decorateVar,
+                decorate);
 
-        Expression newMethodBody = callX(closure, "call", args(arguments));
-        if (method.getReturnType() != ClassHelper.VOID_TYPE) {
-            method.setCode(returnS(newMethodBody));
-        } else {
-            method.setCode(new ExpressionStatement(newMethodBody));
-        }
+        VariableExpression funcVar = varX("func");
+        funcVar.setClosureSharedVariable(true);
+        DeclarationExpression decl = declareX(
+                funcVar,
+                callX(classX(Function.class), "create", args(
+                                classX(method.getDeclaringClass()),
+                                constX(method.getName()),
+                                toTypes(method.getParameters()))));
+
+        List<Expression> decorateArgs = new ArrayList<Expression>();
+        decorateArgs.add(callX(funcVar, "curry", args(varX("delegate"))));
+        decorateArgs.add(toVars(method.getParameters()));
+
+        VariableScope varScope = new VariableScope();
+        varScope.putReferencedLocalVariable(decorateVar);
+        varScope.putReferencedLocalVariable(funcVar);
+        Expression metaClass = propX(classX(method.getDeclaringClass()), "metaClass");
+        ClosureExpression methodInterceptor = new ClosureExpression(
+                method.getParameters(),
+                new ExpressionStatement(callX(decorateVar, "call", args(decorateArgs))));
+        methodInterceptor.setVariableScope(varScope);
+        BinaryExpression decl2 = assignX(propX(metaClass, method.getName()), methodInterceptor);
+
+        List<Statement> statements = Arrays.<Statement>asList(
+                new ExpressionStatement(decl0),
+                new ExpressionStatement(decl),
+                new ExpressionStatement(decl2));
+        BlockStatement blockStatement = new BlockStatement(statements, new VariableScope());
+        method.getDeclaringClass().addStaticInitializerStatements(Arrays.<Statement>asList(blockStatement), false);
     }
 
     private static ListExpression toVars(Parameter[] parameters) {
@@ -94,8 +120,25 @@ public class DecoratorASTTransformation implements ASTTransformation {
         return name2Vars;
     }
 
-    private static ClosureExpression closureX(Parameter[] parameters, Statement body) {
-        return new ClosureExpression(parameters, body);
+    private static ListExpression toTypes(Parameter[] parameters) {
+        ListExpression types = new ListExpression();
+        for (Parameter parameter : parameters) {
+            types.addExpression(classX(parameter.getType()));
+        }
+
+        return types;
+    }
+
+    private static PropertyExpression propX(Expression obj, String propertyName) {
+        return new PropertyExpression(obj, propertyName);
+    }
+
+    private static DeclarationExpression declareX(VariableExpression var, Expression value) {
+        return new DeclarationExpression(var, EQUAL_TOKEN, value);
+    }
+
+    private static BinaryExpression assignX(Expression assignee, Expression value) {
+        return new BinaryExpression(assignee, EQUAL_TOKEN, value);
     }
 
     private static ConstantExpression constX(Object value) {
@@ -110,10 +153,6 @@ public class DecoratorASTTransformation implements ASTTransformation {
         return new ArgumentListExpression(expressions);
     }
 
-    private static ConstructorCallExpression ctorX(ClassNode type, ArgumentListExpression args) {
-        return new ConstructorCallExpression(type, args);
-    }
-
     private static ClassExpression classX(Class type) {
         return new ClassExpression(make(type));
     }
@@ -124,10 +163,6 @@ public class DecoratorASTTransformation implements ASTTransformation {
 
     private static MethodCallExpression callX(Expression type, String methodName, ArgumentListExpression args) {
         return new MethodCallExpression(type, methodName, args);
-    }
-
-    private static ReturnStatement returnS(Expression expression) {
-        return new ReturnStatement(expression);
     }
 
     private static VariableExpression varX(String variableName) {
