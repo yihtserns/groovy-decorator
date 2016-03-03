@@ -15,7 +15,6 @@
  */
 package com.github.yihtserns.groovy.deco;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
@@ -24,6 +23,7 @@ import static org.codehaus.groovy.ast.ClassHelper.make;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
+import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.BinaryExpression;
@@ -71,46 +71,55 @@ public class DecoratorASTTransformation implements ASTTransformation {
         }
 
         AnnotationNode methodDecorator = methodDecorators.get(0);
-        Expression decorate = methodDecorator.getMember("value");
-        decorate = callX(decorate, "newInstance", args(classX(ClassNode.THIS), classX(ClassNode.THIS)));
-        VariableExpression decorateVar = varX("decorate");
+        Expression decoratorBody = methodDecorator.getMember("value");
+
+        VariableExpression decorateVar = varX("_decorate");
         decorateVar.setClosureSharedVariable(true);
-        DeclarationExpression decl0 = declareX(
-                decorateVar,
-                decorate);
+        MethodCallExpression newDecorator = callX(decoratorBody, "newInstance", args(classX(ClassNode.THIS), classX(ClassNode.THIS)));
 
-        VariableExpression funcVar = varX("func");
+        VariableExpression funcVar = varX("_func");
         funcVar.setClosureSharedVariable(true);
-        DeclarationExpression decl = declareX(
-                funcVar,
-                callX(classX(Function.class), "create", args(
-                                classX(method.getDeclaringClass()),
-                                constX(method.getName()),
-                                toTypes(method.getParameters()))));
+        MethodCallExpression createFunction = callX(classX(Function.class), "create", args(
+                classX(method.getDeclaringClass()),
+                constX(method.getName()),
+                toTypes(method.getParameters())));
 
-        List<Expression> decorateArgs = new ArrayList<Expression>();
-        decorateArgs.add(callX(funcVar, "curry", args(varX("delegate"))));
-        decorateArgs.add(toVars(method.getParameters()));
+        MethodCallExpression callDecorate = callX(decorateVar, "call", args(
+                callX(funcVar, "curry", args(varX("delegate"))),
+                toVarList(method.getParameters())));
 
-        VariableScope varScope = new VariableScope();
-        varScope.putReferencedLocalVariable(decorateVar);
-        varScope.putReferencedLocalVariable(funcVar);
         Expression metaClass = propX(classX(method.getDeclaringClass()), "metaClass");
-        ClosureExpression methodInterceptor = new ClosureExpression(
-                method.getParameters(),
-                new ExpressionStatement(callX(decorateVar, "call", args(decorateArgs))));
-        methodInterceptor.setVariableScope(varScope);
-        BinaryExpression decl2 = assignX(propX(metaClass, method.getName()), methodInterceptor);
+        ClosureExpression methodInterceptor = closureX(method.getParameters(), stmtX(callDecorate));
+        methodInterceptor.setVariableScope(localVarScopeOf(
+                decorateVar,
+                funcVar));
 
-        List<Statement> statements = Arrays.<Statement>asList(
-                new ExpressionStatement(decl0),
-                new ExpressionStatement(decl),
-                new ExpressionStatement(decl2));
-        BlockStatement blockStatement = new BlockStatement(statements, new VariableScope());
-        method.getDeclaringClass().addStaticInitializerStatements(Arrays.<Statement>asList(blockStatement), false);
+        Statement initializeMethodInterception = stmtX(
+                declareX(decorateVar, newDecorator),
+                declareX(funcVar, createFunction),
+                assignX(propX(metaClass, method.getName()), methodInterceptor));
+        method.getDeclaringClass().addStaticInitializerStatements(Arrays.<Statement>asList(initializeMethodInterception), false);
     }
 
-    private static ListExpression toVars(Parameter[] parameters) {
+    private static VariableScope localVarScopeOf(Variable... variables) {
+        VariableScope varScope = new VariableScope();
+        for (Variable variable : variables) {
+            varScope.putReferencedLocalVariable(variable);
+        }
+
+        return varScope;
+    }
+
+    private static Statement stmtX(Expression... expressions) {
+        BlockStatement statement = new BlockStatement();
+        for (Expression expression : expressions) {
+            statement.addStatement(new ExpressionStatement(expression));
+        }
+
+        return statement;
+    }
+
+    private static ListExpression toVarList(Parameter[] parameters) {
         ListExpression name2Vars = new ListExpression();
         for (Parameter parameter : parameters) {
             String paramName = parameter.getName();
@@ -133,8 +142,12 @@ public class DecoratorASTTransformation implements ASTTransformation {
         return new PropertyExpression(obj, propertyName);
     }
 
-    private static DeclarationExpression declareX(VariableExpression var, Expression value) {
-        return new DeclarationExpression(var, EQUAL_TOKEN, value);
+    private static DeclarationExpression declareX(VariableExpression var, Expression initialValue) {
+        return new DeclarationExpression(var, EQUAL_TOKEN, initialValue);
+    }
+
+    private static ClosureExpression closureX(Parameter[] parameters, Statement body) {
+        return new ClosureExpression(parameters, body);
     }
 
     private static BinaryExpression assignX(Expression assignee, Expression value) {
@@ -146,10 +159,6 @@ public class DecoratorASTTransformation implements ASTTransformation {
     }
 
     private static ArgumentListExpression args(Expression... expressions) {
-        return new ArgumentListExpression(expressions);
-    }
-
-    private static ArgumentListExpression args(List<Expression> expressions) {
         return new ArgumentListExpression(expressions);
     }
 
