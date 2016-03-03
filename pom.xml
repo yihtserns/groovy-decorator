@@ -12,7 +12,7 @@
     <packaging>jar</packaging>
 
     <name>Groovy Decorator</name>
-    <description>Python-like decorator for Groovy</description>
+    <description>Python-inspired decorator for Groovy</description>
     <url>http://github.com/yihtserns/groovy-decorator</url>
     <issueManagement>
         <url>http://github.com/yihtserns/groovy-decorator/issues</url>

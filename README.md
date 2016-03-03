@@ -1,6 +1,6 @@
 Groovy Decorator
 ================
-Provides a way to intercept method calls.
+Python-inspired decorator for Groovy.
 
 Tested on
 ---------
