@@ -2,6 +2,11 @@ Groovy Decorator
 ================
 Provides a way to intercept method calls.
 
+Tested on
+---------
+- Groovy 2.4.6
+- Java 1.7.0_75
+
 Example
 -------
 ```groovy
