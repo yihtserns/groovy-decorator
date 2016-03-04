@@ -90,4 +90,27 @@ class FunctionTest {
         def greeter = clazz.newInstance()
         assert greeter.greet('Noel') == 'greet'
     }
+
+    @Test
+    void 'decorator works when decorated method is called from a subclass'() {
+        Class clazz = cl.parseClass("""class Greeter {
+            String greet(name) {
+                return 'Hey ' + name
+            }
+
+            static class Greeter2 extends Greeter {
+            }
+        }""")
+
+        def decorate = { func, args -> func(*args) + '!' }
+        def func = Function.create(clazz, 'greet', [String])
+        clazz.metaClass.greet = { String name ->
+            decorate(func.curry(delegate), [name])
+        }
+
+        def clazz2 = clazz.getClasses()[0]
+
+        def greeter2 = clazz2.newInstance()
+        assert greeter2.greet('Noel') == 'Hey Noel!'
+    }
 }
