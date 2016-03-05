@@ -104,7 +104,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 THIS_EXPRESSION,
                 constX(method.getName()),
                 classX(method.getReturnType()),
-                toTypes(method.getParameters())));
+                toTypeList(method.getParameters())));
 
         MethodCallExpression newDecorator = callX(decoratorBody, "newInstance", args(THIS_EXPRESSION, THIS_EXPRESSION));
         createFunction = callX(newDecorator, "call", args(createFunction));
@@ -142,16 +142,15 @@ public class DecoratorASTTransformation implements ASTTransformation {
     }
 
     private static ListExpression toVarList(Parameter[] parameters) {
-        ListExpression name2Vars = new ListExpression();
+        ListExpression vars = new ListExpression();
         for (Parameter parameter : parameters) {
-            String paramName = parameter.getName();
-            name2Vars.addExpression(varX(paramName));
+            vars.addExpression(varX(parameter.getName()));
         }
 
-        return name2Vars;
+        return vars;
     }
 
-    private static ListExpression toTypes(Parameter[] parameters) {
+    private static ListExpression toTypeList(Parameter[] parameters) {
         ListExpression types = new ListExpression();
         for (Parameter parameter : parameters) {
             types.addExpression(classX(parameter.getType()));
