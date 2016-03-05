@@ -15,7 +15,6 @@
  */
 package com.github.yihtserns.groovy.deco;
 
-import java.util.Arrays;
 import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
@@ -26,7 +25,6 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.BinaryExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -34,8 +32,8 @@ import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.PropertyExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
+import static org.codehaus.groovy.ast.expr.VariableExpression.THIS_EXPRESSION;
 import org.codehaus.groovy.ast.stmt.BlockStatement;
 import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
@@ -56,6 +54,35 @@ public class DecoratorASTTransformation implements ASTTransformation {
 
     private static final Token EQUAL_TOKEN = Token.newSymbol(Types.EQUAL, -1, -1);
 
+    /**
+     * <pre>
+     * class MyClass {
+     *   {
+     *      def _decorate = Decorator1._closure.newInstance(this, this)
+     *      def _func = Function.create(this, 'method', boolean, [String, int])
+     *      this.invokeMethod('metaClass', ({
+     *          delegate.method { String x, int y -&gt;
+     *              _decorate(_func, [x, y])
+     *          }
+     *      }) // Supposed to be `this.metaClass { ... }`, but `this.metaClass` got interpreted as `this.getMetaClass()`
+
+     *      def _decorate = Decorator2._closure.newInstance(this, this)
+     *      def _func = Function.create(this, 'method', boolean, [String, int])
+     *      this.invokeMethod('metaClass', {
+     *          delegate.method { String x, int y -&gt;
+     *              _decorate(_func, [x, y])
+     *          }
+     *      })
+     *   }
+     *
+     *  {@code @}Decorator1
+     *  {@code @}Decorator2
+     *   boolean method(String x, int y) {
+     *     ...
+     *   }
+     * }
+     * </pre>
+     */
     @Override
     public void visit(ASTNode[] astNodes, final SourceUnit sourceUnit) {
         AnnotationNode annotation = (AnnotationNode) astNodes[0];
@@ -75,31 +102,34 @@ public class DecoratorASTTransformation implements ASTTransformation {
 
         VariableExpression decorateVar = varX("_decorate");
         decorateVar.setClosureSharedVariable(true);
-        MethodCallExpression newDecorator = callX(decoratorBody, "newInstance", args(classX(ClassNode.THIS), classX(ClassNode.THIS)));
+        MethodCallExpression newDecorator = callX(decoratorBody, "newInstance", args(THIS_EXPRESSION, THIS_EXPRESSION));
 
         VariableExpression funcVar = varX("_func");
         funcVar.setClosureSharedVariable(true);
         MethodCallExpression createFunction = callX(classX(Function.class), "create", args(
-                classX(method.getDeclaringClass()),
+                THIS_EXPRESSION,
                 constX(method.getName()),
                 classX(method.getReturnType()),
                 toTypes(method.getParameters())));
 
         MethodCallExpression callDecorate = callX(decorateVar, "call", args(
-                callX(funcVar, "curry", args(varX("delegate"))),
+                funcVar,
                 toVarList(method.getParameters())));
 
-        Expression metaClass = propX(classX(method.getDeclaringClass()), "metaClass");
-        ClosureExpression methodInterceptor = closureX(method.getParameters(), stmtX(callDecorate));
-        methodInterceptor.setVariableScope(localVarScopeOf(
+        VariableScope localVarScope = localVarScopeOf(
                 decorateVar,
-                funcVar));
+                funcVar);
 
+        ClosureExpression methodInterceptor = closureX(method.getParameters(), stmtX(callDecorate), localVarScope);
+
+        MethodCallExpression declareMethodInterceptor = callX(varX("delegate"), method.getName(), args(methodInterceptor));
         Statement initializeMethodInterception = stmtX(
                 declareX(decorateVar, newDecorator),
                 declareX(funcVar, createFunction),
-                assignX(propX(metaClass, method.getName()), methodInterceptor));
-        method.getDeclaringClass().addStaticInitializerStatements(Arrays.<Statement>asList(initializeMethodInterception), false);
+                callX(THIS_EXPRESSION, "invokeMethod", args(
+                                constX("metaClass"),
+                                closureX(Parameter.EMPTY_ARRAY, stmtX(declareMethodInterceptor), localVarScope))));
+        method.getDeclaringClass().addObjectInitializerStatements(initializeMethodInterception);
     }
 
     private static VariableScope localVarScopeOf(Variable... variables) {
@@ -139,20 +169,15 @@ public class DecoratorASTTransformation implements ASTTransformation {
         return types;
     }
 
-    private static PropertyExpression propX(Expression obj, String propertyName) {
-        return new PropertyExpression(obj, propertyName);
-    }
-
     private static DeclarationExpression declareX(VariableExpression var, Expression initialValue) {
         return new DeclarationExpression(var, EQUAL_TOKEN, initialValue);
     }
 
-    private static ClosureExpression closureX(Parameter[] parameters, Statement body) {
-        return new ClosureExpression(parameters, body);
-    }
+    private static ClosureExpression closureX(Parameter[] parameters, Statement body, VariableScope varScope) {
+        ClosureExpression expression = new ClosureExpression(parameters, body);
+        expression.setVariableScope(varScope);
 
-    private static BinaryExpression assignX(Expression assignee, Expression value) {
-        return new BinaryExpression(assignee, EQUAL_TOKEN, value);
+        return expression;
     }
 
     private static ConstantExpression constX(Object value) {

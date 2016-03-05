@@ -28,13 +28,22 @@ class FunctionTest {
 
     @Test
     void 'can decorate method using one decorator'() {
-        Class clazz = cl.parseClass("class Greeter { String greet(name) { return 'Hey ' + name } }")
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
+            class Greeter {
+                {
+                    def decorate = { func, args -> func(*args) + '!' }
+                    def func = Function.create(this, 'greet', String, [String])
+                    this.metaClass {
+                        greet { String name ->
+                            decorate(func, [name])
+                        }
+                    }
+                }
 
-        def decorate = { func, args -> func(*args) + '!' }
-        def func = Function.create(clazz, 'greet', String, [String])
-        clazz.metaClass.greet = { String name ->
-            decorate(func.curry(delegate), [name])
-        }
+                String greet(name) {
+                    return 'Hey ' + name
+                }
+            }""")
 
         def greeter = clazz.newInstance()
         assert greeter.greet('Noel') == 'Hey Noel!'
@@ -42,22 +51,33 @@ class FunctionTest {
 
     @Test
     void 'can decorate method using two decorators'() {
-        Class clazz = cl.parseClass("class Greeter { String greet(name) { return 'Hey ' + name } }")
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
+            class Greeter {
+                {
+                    exclaim: {
+                        def decorate = { func, args -> func(*args) + '!' }
+                        def func = Function.create(this, 'greet', String, [String])
+                        this.metaClass {
+                            greet { String name ->
+                                decorate(func, [name])
+                            }
+                        }
+                    }
+                    question: {
+                        def decorate = { func, args -> func(*args) + '?' }
+                        def func = Function.create(this, 'greet', String, [String])
+                        this.metaClass {
+                            greet { String name ->
+                                decorate(func, [name])
+                            }
+                        }
+                    }
+                }
 
-        exclaim: {
-            def decorate = { func, args -> func(*args) + '!' }
-            def func = Function.create(clazz, 'greet', String, [String])
-            clazz.metaClass.greet = { String name ->
-                decorate(func.curry(delegate), [name])
-            }
-        }
-        question: {
-            def decorate = { func, args -> func(*args) + '?' }
-            def func = Function.create(clazz, 'greet', String, [String])
-            clazz.metaClass.greet = { String name ->
-                decorate(func.curry(delegate), [name])
-            }
-        }
+                String greet(name) {
+                    return 'Hey ' + name
+                }
+            }""")
 
         def greeter = clazz.newInstance()
         assert greeter.greet('Noel') == 'Hey Noel!?'
@@ -65,13 +85,22 @@ class FunctionTest {
 
     @Test
     void 'can decorate method with two params'() {
-        Class clazz = cl.parseClass("class Greeter { String greet(name, id) { return 'Hey ' + name + ' ' + id } }")
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
+            class Greeter {
+                {
+                    def decorate = { func, args -> func(*args) + '!' }
+                    def func = Function.create(this, 'greet', String, [String, int])
+                    this.metaClass {
+                        greet { String name, int id ->
+                            decorate(func, [name, id])
+                        }
+                    }
+                }
 
-        def decorate = { func, args -> func(*args) + '!' }
-        def func = Function.create(clazz, 'greet', String, [String, int])
-        clazz.metaClass.greet = { String name, int id ->
-            decorate(func.curry(delegate), [name, id])
-        }
+                String greet(name, id) {
+                    return 'Hey ' + name + ' ' + id
+                }
+            }""")
 
         def greeter = clazz.newInstance()
         assert greeter.greet('Noel', 300) == 'Hey Noel 300!'
@@ -79,13 +108,22 @@ class FunctionTest {
 
     @Test
     void 'can get method name'() {
-        Class clazz = cl.parseClass("class Greeter { String greet(name) { } }")
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
+            class Greeter {
+                {
+                    def decorate = { func, args -> func.name }
+                    def func = Function.create(this, 'greet', String, [String])
+                    this.metaClass {
+                        greet { String name ->
+                            decorate(func, [name])
+                        }
+                    }
+                }
+                
+                String greet(name) {
 
-        def decorate = { func, args -> func.name }
-        def func = Function.create(clazz, 'greet', String, [String])
-        clazz.metaClass.greet = { String name ->
-            decorate(func.curry(delegate), [name])
-        }
+                }
+            }""")
 
         def greeter = clazz.newInstance()
         assert greeter.greet('Noel') == 'greet'
@@ -93,20 +131,25 @@ class FunctionTest {
 
     @Test
     void 'decorator works when decorated method is called from a subclass'() {
-        Class clazz = cl.parseClass("""class Greeter {
-            String greet(name) {
-                return 'Hey ' + name
-            }
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
+            class Greeter {
+                {
+                    def decorate = { func, args -> func(*args) + '!' }
+                    def func = Function.create(this, 'greet', String, [String])
+                    this.metaClass {
+                        greet { String name ->
+                            decorate(func, [name])
+                        }
+                    }
+                }
 
-            static class Greeter2 extends Greeter {
-            }
-        }""")
+                String greet(name) {
+                    return 'Hey ' + name
+                }
 
-        def decorate = { func, args -> func(*args) + '!' }
-        def func = Function.create(clazz, 'greet', String, [String])
-        clazz.metaClass.greet = { String name ->
-            decorate(func.curry(delegate), [name])
-        }
+                static class Greeter2 extends Greeter {
+                }
+            }""")
 
         def clazz2 = clazz.getClasses()[0]
 
@@ -116,22 +159,32 @@ class FunctionTest {
 
     @Test
     void "should return original method's return type"() {
-        Class clazz = cl.parseClass("class Greeter { void greet(name) { } }")
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
+            class Greeter {
+                {
+                    doNothing: {
+                        def decorate = { func, args -> }
+                        def func = Function.create(this, 'greet', void, [String])
+                        this.metaClass {
+                            greet { String name ->
+                                decorate(func, [name])
+                            }
+                        }
+                    }
+                    getReturnType: {
+                        def decorate = { func, args -> func.returnType }
+                        def func = Function.create(this, 'greet', void, [String])
+                        this.metaClass {
+                            greet { String name ->
+                                decorate(func, [name])
+                            }
+                        }
+                    }
+                }
 
-        doNothing: {
-            def decorate = { func, args -> }
-            def func = Function.create(clazz, 'greet', void, [String])
-            clazz.metaClass.greet = { String name ->
-                decorate(func.curry(delegate), [name])
-            }
-        }
-        getReturnType: {
-            def decorate = { func, args -> func.returnType }
-            def func = Function.create(clazz, 'greet', void, [String])
-            clazz.metaClass.greet = { String name ->
-                decorate(func.curry(delegate), [name])
-            }
-        }
+                void greet(name) {
+                }
+            }""")
 
         def greeter = clazz.newInstance()
         assert greeter.greet('Noel') == void

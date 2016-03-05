@@ -28,15 +28,17 @@ import org.codehaus.groovy.runtime.InvokerHelper;
 public class Function extends Closure {
 
     private MetaMethod method;
+    private Object instance;
     private Class<?> returnType;
 
-    public Function(MetaMethod method, Class<?> returnType) {
+    public Function(MetaMethod method, Object instance, Class<?> returnType) {
         super(null);
         this.method = method;
+        this.instance = instance;
         this.returnType = returnType;
     }
 
-    public Object doCall(Object instance, Object... args) {
+    public Object doCall(Object... args) {
         return method.doMethodInvoke(instance, args);
     }
 
@@ -62,11 +64,11 @@ public class Function extends Closure {
         return super.getProperty(property);
     }
 
-    public static Function create(Class clazz, String methodName, Class<?> returnType, List<Class> parameterTypes) {
-        MetaMethod method = InvokerHelper.getMetaClass(clazz).pickMethod(
+    public static Function create(Object instance, String methodName, Class<?> returnType, List<Class> parameterTypes) {
+        MetaMethod method = InvokerHelper.getMetaClass(instance).pickMethod(
                 methodName,
                 parameterTypes.toArray(new Class[parameterTypes.size()]));
 
-        return new Function(method, returnType);
+        return new Function(method, instance, returnType);
     }
 }
