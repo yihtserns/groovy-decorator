@@ -82,6 +82,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
         MethodCallExpression createFunction = callX(classX(Function.class), "create", args(
                 classX(method.getDeclaringClass()),
                 constX(method.getName()),
+                classX(method.getReturnType()),
                 toTypes(method.getParameters())));
 
         MethodCallExpression callDecorate = callX(decorateVar, "call", args(

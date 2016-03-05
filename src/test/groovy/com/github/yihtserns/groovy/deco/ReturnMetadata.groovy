@@ -24,7 +24,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
  *
  * @author yihtserns
  */
-@MethodDecorator({ func, args -> func.name })
+@MethodDecorator({ func, args -> [func.name, func.returnType] })
 @GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
-@interface ReturnMethodName {
+@interface ReturnMetadata {
 }

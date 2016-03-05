@@ -31,7 +31,7 @@ class FunctionTest {
         Class clazz = cl.parseClass("class Greeter { String greet(name) { return 'Hey ' + name } }")
 
         def decorate = { func, args -> func(*args) + '!' }
-        def func = Function.create(clazz, 'greet', [String])
+        def func = Function.create(clazz, 'greet', String, [String])
         clazz.metaClass.greet = { String name ->
             decorate(func.curry(delegate), [name])
         }
@@ -46,14 +46,14 @@ class FunctionTest {
 
         exclaim: {
             def decorate = { func, args -> func(*args) + '!' }
-            def func = Function.create(clazz, 'greet', [String])
+            def func = Function.create(clazz, 'greet', String, [String])
             clazz.metaClass.greet = { String name ->
                 decorate(func.curry(delegate), [name])
             }
         }
         question: {
             def decorate = { func, args -> func(*args) + '?' }
-            def func = Function.create(clazz, 'greet', [String])
+            def func = Function.create(clazz, 'greet', String, [String])
             clazz.metaClass.greet = { String name ->
                 decorate(func.curry(delegate), [name])
             }
@@ -68,7 +68,7 @@ class FunctionTest {
         Class clazz = cl.parseClass("class Greeter { String greet(name, id) { return 'Hey ' + name + ' ' + id } }")
 
         def decorate = { func, args -> func(*args) + '!' }
-        def func = Function.create(clazz, 'greet', [String, int])
+        def func = Function.create(clazz, 'greet', String, [String, int])
         clazz.metaClass.greet = { String name, int id ->
             decorate(func.curry(delegate), [name, id])
         }
@@ -82,7 +82,7 @@ class FunctionTest {
         Class clazz = cl.parseClass("class Greeter { String greet(name) { } }")
 
         def decorate = { func, args -> func.name }
-        def func = Function.create(clazz, 'greet', [String])
+        def func = Function.create(clazz, 'greet', String, [String])
         clazz.metaClass.greet = { String name ->
             decorate(func.curry(delegate), [name])
         }
@@ -103,7 +103,7 @@ class FunctionTest {
         }""")
 
         def decorate = { func, args -> func(*args) + '!' }
-        def func = Function.create(clazz, 'greet', [String])
+        def func = Function.create(clazz, 'greet', String, [String])
         clazz.metaClass.greet = { String name ->
             decorate(func.curry(delegate), [name])
         }
@@ -112,5 +112,28 @@ class FunctionTest {
 
         def greeter2 = clazz2.newInstance()
         assert greeter2.greet('Noel') == 'Hey Noel!'
+    }
+
+    @Test
+    void "should return original method's return type"() {
+        Class clazz = cl.parseClass("class Greeter { void greet(name) { } }")
+
+        doNothing: {
+            def decorate = { func, args -> }
+            def func = Function.create(clazz, 'greet', void, [String])
+            clazz.metaClass.greet = { String name ->
+                decorate(func.curry(delegate), [name])
+            }
+        }
+        getReturnType: {
+            def decorate = { func, args -> func.returnType }
+            def func = Function.create(clazz, 'greet', void, [String])
+            clazz.metaClass.greet = { String name ->
+                decorate(func.curry(delegate), [name])
+            }
+        }
+
+        def greeter = clazz.newInstance()
+        assert greeter.greet('Noel') == void
     }
 }

@@ -96,28 +96,28 @@ class DecoratorASTTransformationTest {
     }
 
     @Test
-    public void 'can get method name'() {
+    public void 'can get func metadata'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
 
-                @ReturnMethodName
+                @ReturnMetadata
                 String greet(String name) {
                 }
 
-                @ReturnMethodName
+                @ReturnMetadata
                 String farewell(String name, int count) {
                 }
 
-                @ReturnMethodName
-                String bid() {
+                @ReturnMetadata
+                int bid() {
                 }
             }
         """)
 
-        assert instance.greet('Noel') == 'greet'
-        assert instance.farewell('Noel', 3) == 'farewell'
-        assert instance.bid() == 'bid'
+        assert instance.greet('Noel') == ['greet', String]
+        assert instance.farewell('Noel', 3) == ['farewell', String]
+        assert instance.bid() == ['bid', int]
     }
 
     @Test
