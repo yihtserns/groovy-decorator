@@ -58,19 +58,17 @@ public class DecoratorASTTransformation implements ASTTransformation {
      * <pre>
      * class MyClass {
      *   {
-     *      def _decorate = Decorator1._closure.newInstance(this, this)
-     *      def _func = Function.create(this, 'method', boolean, [String, int])
+     *      def _func = Decorator1._closure.newInstance(this, this)(Function.create(this, 'method', boolean, [String, int]))
      *      this.invokeMethod('metaClass', ({
      *          delegate.method { String x, int y -&gt;
-     *              _decorate(_func, [x, y])
+     *              _func([x, y])
      *          }
      *      }) // Supposed to be `this.metaClass { ... }`, but `this.metaClass` got interpreted as `this.getMetaClass()`
 
-     *      def _decorate = Decorator2._closure.newInstance(this, this)
-     *      def _func = Function.create(this, 'method', boolean, [String, int])
+     *      def _func = Decorator2._closure.newInstance(this, this)(Function.create(this, 'method', boolean, [String, int]))
      *      this.invokeMethod('metaClass', {
      *          delegate.method { String x, int y -&gt;
-     *              _decorate(_func, [x, y])
+     *              _func([x, y])
      *          }
      *      })
      *   }
@@ -100,10 +98,6 @@ public class DecoratorASTTransformation implements ASTTransformation {
         AnnotationNode methodDecorator = methodDecorators.get(0);
         Expression decoratorBody = methodDecorator.getMember("value");
 
-        VariableExpression decorateVar = varX("_decorate");
-        decorateVar.setClosureSharedVariable(true);
-        MethodCallExpression newDecorator = callX(decoratorBody, "newInstance", args(THIS_EXPRESSION, THIS_EXPRESSION));
-
         VariableExpression funcVar = varX("_func");
         funcVar.setClosureSharedVariable(true);
         MethodCallExpression createFunction = callX(classX(Function.class), "create", args(
@@ -112,19 +106,16 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 classX(method.getReturnType()),
                 toTypes(method.getParameters())));
 
-        MethodCallExpression callDecorate = callX(decorateVar, "call", args(
-                funcVar,
-                toVarList(method.getParameters())));
+        MethodCallExpression newDecorator = callX(decoratorBody, "newInstance", args(THIS_EXPRESSION, THIS_EXPRESSION));
+        createFunction = callX(newDecorator, "call", args(createFunction));
 
-        VariableScope localVarScope = localVarScopeOf(
-                decorateVar,
-                funcVar);
+        MethodCallExpression callFunction = callX(funcVar, "call", args(toVarList(method.getParameters())));
+        VariableScope localVarScope = localVarScopeOf(funcVar);
 
-        ClosureExpression methodInterceptor = closureX(method.getParameters(), stmtX(callDecorate), localVarScope);
-
+        ClosureExpression methodInterceptor = closureX(method.getParameters(), stmtX(callFunction), localVarScope);
         MethodCallExpression declareMethodInterceptor = callX(varX("delegate"), method.getName(), args(methodInterceptor));
+
         Statement initializeMethodInterception = stmtX(
-                declareX(decorateVar, newDecorator),
                 declareX(funcVar, createFunction),
                 callX(THIS_EXPRESSION, "invokeMethod", args(
                                 constX("metaClass"),

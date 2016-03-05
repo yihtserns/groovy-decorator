@@ -24,7 +24,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
  *
  * @author yihtserns
  */
-@MethodDecorator({ func, args -> func(*args) + '?'})
+@MethodDecorator({ func -> { args -> func(*args) + '?' } })
 @GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
 @interface Question {
 }

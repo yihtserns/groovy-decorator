@@ -14,13 +14,15 @@ Example
 import com.github.yihtserns.groovy.deco.MethodDecorator
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
-@MethodDecorator({ func, args ->
-    String username = args[0]
+@MethodDecorator({ func -> {
+    { args ->
+        String username = args[0]
 
-    if (username == 'hacker') {
-        throw new UnsupportedOperationException("Hacker not allowed")
-    } else {
-        func(*args) // Call original method
+        if (username == 'hacker') {
+            throw new UnsupportedOperationException("Hacker not allowed")
+        } else {
+            func(*args) // Call original method
+        }
     }
 })
 @GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")

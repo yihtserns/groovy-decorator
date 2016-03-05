@@ -24,11 +24,13 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
  *
  * @author yihtserns
  */
-@MethodDecorator({ func, args ->
-    args[0] = 'Mr. ' + args[0]
+@MethodDecorator({ func ->
+    { args ->
+        args[0] = 'Mr. ' + args[0]
 
-    return func(*args)}
-)
+        return func(*args)
+    }
+})
 @GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
 @interface Honorific {
 }
