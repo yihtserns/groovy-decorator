@@ -44,3 +44,16 @@ def op = new SomeOperation()
 op.doStuff('good guy', 3) // prints 'good guy: 3'
 op.doStuff('hacker', 1) // throws UnsupportedOperationException
 ```
+
+Limitations
+-----------
+### Cannot work with @CompileStatic
+An exception will be thrown:
+```groovy
+General error during class generation: size==0
+
+java.lang.ArrayIndexOutOfBoundsException: size==0
+	at org.codehaus.groovy.classgen.asm.OperandStack.getTopOperand(OperandStack.java:729)
+	at org.codehaus.groovy.classgen.asm.BinaryExpressionHelper.evaluateEqual(BinaryExpressionHelper.java:306)
+...
+```
