@@ -101,26 +101,26 @@ public class DecoratorASTTransformation implements ASTTransformation {
 
         VariableExpression funcVar = varX("_func");
         funcVar.setClosureSharedVariable(true);
-        MethodCallExpression createFunction = callX(classX(Function.class), "create", args(
+        MethodCallExpression createFunction = callX(classX(Function.class), "create", argsX(
                 THIS_EXPRESSION,
                 constX(method.getName()),
                 classX(method.getReturnType()),
                 toTypeList(method.getParameters())));
 
-        ConstructorCallExpression newDecorator = ctorX(decoratorClass.getType(), args(THIS_EXPRESSION, THIS_EXPRESSION));
-        createFunction = callX(newDecorator, "call", args(createFunction));
+        ConstructorCallExpression newDecorator = ctorX(decoratorClass.getType(), argsX(THIS_EXPRESSION, THIS_EXPRESSION));
+        createFunction = callX(newDecorator, "call", argsX(createFunction));
 
-        MethodCallExpression callFunction = callX(funcVar, "call", args(toVarList(method.getParameters())));
+        MethodCallExpression callFunction = callX(funcVar, "call", argsX(toVarList(method.getParameters())));
         VariableScope localVarScope = localVarScopeOf(funcVar);
 
-        ClosureExpression methodInterceptor = closureX(method.getParameters(), stmtX(callFunction), localVarScope);
-        MethodCallExpression declareMethodInterceptor = callX(varX("delegate"), method.getName(), args(methodInterceptor));
+        ClosureExpression methodInterceptor = closureX(method.getParameters(), stmtS(callFunction), localVarScope);
+        MethodCallExpression declareMethodInterceptor = callX(varX("delegate"), method.getName(), argsX(methodInterceptor));
 
-        Statement initializeMethodInterception = stmtX(
+        Statement initializeMethodInterception = stmtS(
                 declareX(funcVar, createFunction),
-                callX(THIS_EXPRESSION, "invokeMethod", args(
+                callX(THIS_EXPRESSION, "invokeMethod", argsX(
                                 constX("metaClass"),
-                                closureX(Parameter.EMPTY_ARRAY, stmtX(declareMethodInterceptor), localVarScope))));
+                                closureX(Parameter.EMPTY_ARRAY, stmtS(declareMethodInterceptor), localVarScope))));
         method.getDeclaringClass().addObjectInitializerStatements(initializeMethodInterception);
     }
 
@@ -133,7 +133,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
         return varScope;
     }
 
-    private static Statement stmtX(Expression... expressions) {
+    private static Statement stmtS(Expression... expressions) {
         BlockStatement statement = new BlockStatement();
         for (Expression expression : expressions) {
             statement.addStatement(new ExpressionStatement(expression));
@@ -175,7 +175,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
         return new ConstantExpression(value);
     }
 
-    private static ArgumentListExpression args(Expression... expressions) {
+    private static ArgumentListExpression argsX(Expression... expressions) {
         return new ArgumentListExpression(expressions);
     }
 
