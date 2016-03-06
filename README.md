@@ -57,3 +57,8 @@ java.lang.ArrayIndexOutOfBoundsException: size==0
 	at org.codehaus.groovy.classgen.asm.BinaryExpressionHelper.evaluateEqual(BinaryExpressionHelper.java:306)
 ...
 ```
+
+Gotcha
+------
+### Does not work on private method for Groovy version >= 2.4.0
+Due to [GROOVY-7368](https://issues.apache.org/jira/browse/GROOVY-7368).
