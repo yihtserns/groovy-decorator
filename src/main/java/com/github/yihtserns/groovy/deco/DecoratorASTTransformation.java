@@ -28,6 +28,7 @@ import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
@@ -58,14 +59,14 @@ public class DecoratorASTTransformation implements ASTTransformation {
      * <pre>
      * class MyClass {
      *   {
-     *      def _func = Decorator1._closure.newInstance(this, this)(Function.create(this, 'method', boolean, [String, int]))
+     *      def _func = new Decorator1._closure(this, this)(Function.create(this, 'method', boolean, [String, int]))
      *      this.invokeMethod('metaClass', ({
      *          delegate.method { String x, int y -&gt;
      *              _func([x, y])
      *          }
      *      }) // Supposed to be `this.metaClass { ... }`, but `this.metaClass` got interpreted as `this.getMetaClass()`
 
-     *      def _func = Decorator2._closure.newInstance(this, this)(Function.create(this, 'method', boolean, [String, int]))
+     *      def _func = new Decorator2._closure(this, this)(Function.create(this, 'method', boolean, [String, int]))
      *      this.invokeMethod('metaClass', {
      *          delegate.method { String x, int y -&gt;
      *              _func([x, y])
@@ -96,7 +97,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
         }
 
         AnnotationNode methodDecorator = methodDecorators.get(0);
-        Expression decoratorBody = methodDecorator.getMember("value");
+        ClassExpression decoratorClass = (ClassExpression) methodDecorator.getMember("value");
 
         VariableExpression funcVar = varX("_func");
         funcVar.setClosureSharedVariable(true);
@@ -106,7 +107,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 classX(method.getReturnType()),
                 toTypeList(method.getParameters())));
 
-        MethodCallExpression newDecorator = callX(decoratorBody, "newInstance", args(THIS_EXPRESSION, THIS_EXPRESSION));
+        ConstructorCallExpression newDecorator = ctorX(decoratorClass.getType(), args(THIS_EXPRESSION, THIS_EXPRESSION));
         createFunction = callX(newDecorator, "call", args(createFunction));
 
         MethodCallExpression callFunction = callX(funcVar, "call", args(toVarList(method.getParameters())));
@@ -188,6 +189,10 @@ public class DecoratorASTTransformation implements ASTTransformation {
 
     private static MethodCallExpression callX(Expression type, String methodName, ArgumentListExpression args) {
         return new MethodCallExpression(type, methodName, args);
+    }
+
+    private static ConstructorCallExpression ctorX(ClassNode type, Expression args) {
+        return new ConstructorCallExpression(type, args);
     }
 
     private static VariableExpression varX(String variableName) {
