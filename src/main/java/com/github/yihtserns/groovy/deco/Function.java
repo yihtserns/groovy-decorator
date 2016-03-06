@@ -38,8 +38,8 @@ public class Function extends Closure {
         this.returnType = returnType;
     }
 
-    public Object doCall(Object... args) {
-        return method.doMethodInvoke(instance, args);
+    public Object doCall(List<Object> args) {
+        return method.doMethodInvoke(instance, args.toArray(new Object[args.size()]));
     }
 
     /**

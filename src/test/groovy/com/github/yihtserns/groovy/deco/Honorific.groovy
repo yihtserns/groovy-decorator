@@ -28,7 +28,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
     { args ->
         args[0] = 'Mr. ' + args[0]
 
-        return func(*args)
+        return func(args)
     }
 })
 @GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")

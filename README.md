@@ -21,7 +21,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
         if (username == 'hacker') {
             throw new UnsupportedOperationException("Hacker not allowed")
         } else {
-            func(*args) // Call original method
+            func(args) // Call original method
         }
     }
 })

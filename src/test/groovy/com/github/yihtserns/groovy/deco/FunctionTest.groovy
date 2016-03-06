@@ -32,7 +32,7 @@ class FunctionTest {
             class Greeter {
                 {
                     def decorate = { func ->
-                        { args -> func(*args) + '!' }
+                        { args -> func(args) + '!' }
                     }
                     def func = decorate Function.create(this, 'greet', String, [String])
                     this.metaClass {
@@ -58,7 +58,7 @@ class FunctionTest {
                 {
                     exclaim: {
                         def decorate = { func ->
-                            { args -> func(*args) + '!' }
+                            { args -> func(args) + '!' }
                         }
                         def func = decorate Function.create(this, 'greet', String, [String])
                         this.metaClass {
@@ -69,7 +69,7 @@ class FunctionTest {
                     }
                     question: {
                         def decorate = { func ->
-                            { args -> func(*args) + '?' }
+                            { args -> func(args) + '?' }
                         }
                         def func = decorate Function.create(this, 'greet', String, [String])
                         this.metaClass {
@@ -95,7 +95,7 @@ class FunctionTest {
             class Greeter {
                 {
                     def decorate = { func ->
-                        { args -> func(*args) + '!' }
+                        { args -> func(args) + '!' }
                     }
                     def func = decorate Function.create(this, 'greet', String, [String, int])
                     this.metaClass {
@@ -145,7 +145,7 @@ class FunctionTest {
             class Greeter {
                 {
                     def decorate = { func ->
-                        { args -> func(*args) + '!' }
+                        { args -> func(args) + '!' }
                     }
                     def func = decorate Function.create(this, 'greet', String, [String])
                     this.metaClass {
