@@ -167,6 +167,35 @@ class DecoratorASTTransformationTest {
         }
     }
 
+    /**
+     * Just to add to the possible scenarios that may need to be supported.
+     */
+    @Test
+    public void 'can mimic groovy.transform.Memoized'() {
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Exclaim
+            import com.github.yihtserns.groovy.deco.Memoized
+
+            class Greeter {
+                int count = 1
+
+                @Exclaim
+                @Memoized
+                String greet(name) {
+                    if (count >= 5) {
+                        throw new RuntimeException("Cannot call method more than 5 times")
+                    }
+                    count++
+
+                    return 'Hey ' + name
+                }
+            }""")
+
+        def greeter = clazz.newInstance()
+        10.times {
+            assert greeter.greet('Noel') == 'Hey Noel!'
+        }
+    }
+
     def toInstance(String classScript) {
         def clazz = cl.parseClass(classScript)
 
