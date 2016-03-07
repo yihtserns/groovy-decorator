@@ -107,4 +107,19 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <!-- For Travis CI -->
+            <id>groovy-version-env-override</id>
+            <activation>
+                <property>
+                    <name>env.GROOVYVERSION</name>
+                </property>
+            </activation>
+            <properties>
+                <groovy.version>${env.GROOVYVERSION}</groovy.version>
+            </properties>
+        </profile>
+    </profiles>
 </project>
