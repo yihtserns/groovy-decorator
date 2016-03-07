@@ -36,6 +36,7 @@ public class Function extends Closure {
         this.delegate = delegate;
         this.methodName = methodName;
         this.returnType = returnType;
+        setResolveStrategy(TO_SELF);
     }
 
     public Object doCall(List<Object> args) {
