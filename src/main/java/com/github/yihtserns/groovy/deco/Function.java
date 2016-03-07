@@ -77,10 +77,10 @@ public class Function extends Closure {
         return new DecoratedFunction(decorated, methodName, returnType);
     }
 
-    public static Function create(Object instance, String methodName, Class<?> returnType, List<Class> parameterTypes) {
+    public static Function create(Object instance, String methodName, Class<?> returnType, Class[] parameterTypes) {
         MetaMethod method = InvokerHelper.getMetaClass(instance).pickMethod(
                 methodName,
-                parameterTypes.toArray(new Class[parameterTypes.size()]));
+                parameterTypes);
 
         return create(new MetaMethodClosure(method, instance), methodName, returnType);
     }

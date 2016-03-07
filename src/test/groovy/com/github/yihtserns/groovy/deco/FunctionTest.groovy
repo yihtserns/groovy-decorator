@@ -33,7 +33,7 @@ class FunctionTest {
                     def decorator = { func ->
                         { args -> func(args) + '!' }
                     }
-                    def func = Function.create(this, 'greet', String, [String]).decorateWith(decorator)
+                    def func = Function.create(this, 'greet', String, [String] as Class[]).decorateWith(decorator)
                     this.metaClass {
                         greet { String name ->
                             func([name])
@@ -59,7 +59,7 @@ class FunctionTest {
                         def decorator = { func ->
                             { args -> func(args) + '!' }
                         }
-                        def func = Function.create(this, 'greet', String, [String]).decorateWith(decorator)
+                        def func = Function.create(this, 'greet', String, [String] as Class[]).decorateWith(decorator)
                         this.metaClass {
                             greet { String name ->
                                 func([name])
@@ -70,7 +70,7 @@ class FunctionTest {
                         def decorator = { func ->
                             { args -> func(args) + '?' }
                         }
-                        def func = Function.create(this, 'greet', String, [String]).decorateWith(decorator)
+                        def func = Function.create(this, 'greet', String, [String] as Class[]).decorateWith(decorator)
                         this.metaClass {
                             greet { String name ->
                                 func([name])
@@ -96,7 +96,7 @@ class FunctionTest {
                     def decorator = { func ->
                         { args -> func(args) + '!' }
                     }
-                    def func = Function.create(this, 'greet', String, [String, int]).decorateWith(decorator)
+                    def func = Function.create(this, 'greet', String, [String, int] as Class[]).decorateWith(decorator)
                     this.metaClass {
                         greet { String name, int id ->
                             func([name, id])
@@ -121,7 +121,7 @@ class FunctionTest {
                     def decorator = { func ->
                         { args -> func.name }
                     }
-                    def func = Function.create(this, 'greet', String, [String]).decorateWith(decorator)
+                    def func = Function.create(this, 'greet', String, [String] as Class[]).decorateWith(decorator)
                     this.metaClass {
                         greet { String name ->
                             func([name])
@@ -146,7 +146,7 @@ class FunctionTest {
                     def decorator = { func ->
                         { args -> func(args) + '!' }
                     }
-                    def func = Function.create(this, 'greet', String, [String]).decorateWith(decorator)
+                    def func = Function.create(this, 'greet', String, [String] as Class[]).decorateWith(decorator)
                     this.metaClass {
                         greet { String name ->
                             func([name])
@@ -175,7 +175,7 @@ class FunctionTest {
                 {
                     doNothing: {
                         def decorator = { func -> { args -> } }
-                        def func = Function.create(this, 'greet', void, [String]).decorateWith(decorator)
+                        def func = Function.create(this, 'greet', void, [String] as Class[]).decorateWith(decorator)
                         this.metaClass {
                             greet { String name ->
                                 func([name])
@@ -184,7 +184,7 @@ class FunctionTest {
                     }
                     getReturnType: {
                         def decorator = { func -> { args -> func.returnType } }
-                        def func = Function.create(this, 'greet', void, [String]).decorateWith(decorator)
+                        def func = Function.create(this, 'greet', void, [String] as Class[]).decorateWith(decorator)
                         this.metaClass {
                             greet { String name ->
                                 func([name])

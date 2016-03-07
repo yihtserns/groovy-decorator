@@ -110,7 +110,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 THIS_EXPRESSION,
                 constX(method.getName()),
                 classX(method.getReturnType()),
-                toTypeList(method.getParameters())));
+                toTypes(CLASS_Type, method.getParameters())));
 
         MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", argsX(classX(annotation.getClassNode())));
         ConstructorCallExpression newDecorator = ctorX(decoratorClass.getType(), argsX(THIS_EXPRESSION, THIS_EXPRESSION));
@@ -157,15 +157,6 @@ public class DecoratorASTTransformation implements ASTTransformation {
         }
 
         return vars;
-    }
-
-    private static ListExpression toTypeList(Parameter[] parameters) {
-        ListExpression types = new ListExpression();
-        for (Parameter parameter : parameters) {
-            types.addExpression(classX(parameter.getType()));
-        }
-
-        return types;
     }
 
     private static ArrayExpression toTypes(ClassNode arrayType, Parameter[] parameters) {
