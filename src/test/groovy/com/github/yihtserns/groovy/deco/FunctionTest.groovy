@@ -218,4 +218,28 @@ class FunctionTest {
         func = func.decorateWith { f -> { args -> "$f.name : $f.returnType.simpleName -> ${f(args)}" } }
         assert func(['Noel']) == 'call : String -> Hey Noel!?'
     }
+
+    @Test
+    void 'can pass object to decorator'() {
+        def func = { name -> "Hey $name" }
+        func = Function.create(func, 'call', String)
+        
+        def withHonorific = func.decorateWith('Mr.') { f, title ->
+            { args ->
+                args[0] = title + " " + args[0]
+
+                f(args)
+            }
+        }
+        assert withHonorific(['Noel']) == 'Hey Mr. Noel'
+    }
+
+    @Test
+    void "don't pass object to decorator if no param declared for the it"() {
+        def func = { name -> "Hey $name" }
+        func = Function.create(func, 'call', String)
+
+        def unadorned = func.decorateWith('Mr.') { f -> { args -> f(args) } }
+        assert unadorned(['Noel']) == 'Hey Noel'
+    }
 }

@@ -66,7 +66,13 @@ public class Function extends Closure {
     }
 
     public Closure decorateWith(Closure<Closure> decorator) {
-        Closure decorated = decorator.call(this);
+        return decorateWith(null, decorator);
+    }
+
+    public Closure decorateWith(Object baggage, Closure<Closure> decorator) {
+        Closure decorated = decorator.getMaximumNumberOfParameters() == 1
+                ? decorator.call(this)
+                : decorator.call(this, baggage);
 
         return new DecoratedFunction(decorated, methodName, returnType);
     }
