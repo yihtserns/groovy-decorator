@@ -62,16 +62,20 @@ public class DecoratorASTTransformation implements ASTTransformation {
      * <pre>
      * class MyClass {
      *   {
-     *      def _func = Function.create(this, 'method', boolean, [String, int])
-     .decorateWith([el1:val1, el2:val2,... elN:valN])(new Decorator1$_closure1(this, this))
+     *      def _func = Function.create(this, 'method', boolean, [String, int] as Class[])
+     *                          .decorateWith(
+     *                               MyClass.getMethod('method', [String, int] as Class[]).getAnnotation(Decorator1.class),
+     *                               new Decorator1$_closure1(this, this))
      *      this.invokeMethod('metaClass', ({
      *          delegate.method { String x, int y -&gt;
      *              _func([x, y])
      *          }
      *      }) // Supposed to be `this.metaClass { ... }`, but `this.metaClass` got interpreted as `this.getMetaClass()`
-
-     *      def _func = Function.create(this, 'method', boolean, [String, int])
-     .decorateWith([:])(new Decorator2$_closure1(this, this))
+     *
+     *      def _func = Function.create(this, 'method', boolean, [String, int] as Class[])
+     *                          .decorateWith(
+     *                               MyClass.getMethod('method', [String, int] as Class[]).getAnnotation(Decorator2.class),
+     *                               new Decorator2$_closure1(this, this))
      *      this.invokeMethod('metaClass', {
      *          delegate.method { String x, int y -&gt;
      *              _func([x, y])
