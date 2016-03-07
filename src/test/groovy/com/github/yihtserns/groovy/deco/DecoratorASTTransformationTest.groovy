@@ -196,6 +196,73 @@ class DecoratorASTTransformationTest {
         }
     }
 
+    @Test
+    public void 'can reference elements in decorator annotation'() {
+        withoutMaxCacheSize: {
+            def greeter = toInstance("""import com.github.yihtserns.groovy.deco.Exclaim
+            import com.github.yihtserns.groovy.deco.Memoized
+
+            class Greeter {
+                int called = 0
+
+                @Memoized
+                int greet(int diff) {
+                    called++
+                    return diff
+                }
+            }""")
+
+            greeter.greet(1)
+            greeter.greet(2)
+            greeter.greet(3)
+            greeter.greet(1)
+            greeter.greet(2)
+            greeter.greet(3)
+            assert greeter.called == 3
+
+            greeter.greet(100) // Won't kick anyone out since cache has unlimited size
+            assert greeter.called == 4
+
+            greeter.greet(3)
+            assert greeter.called == 4 // Verify value '3' still in cache
+
+            greeter.greet(1)
+            assert greeter.called == 4 // Verify value '1' still in cache
+        }
+
+        withMaxCacheSize: {
+            def greeter = toInstance("""import com.github.yihtserns.groovy.deco.Exclaim
+                import com.github.yihtserns.groovy.deco.Memoized
+
+                class Greeter {
+                    int called = 0
+
+                    @Memoized(maxCacheSize = 3)
+                    int greet(int diff) {
+                        called++
+                        return diff
+                    }
+                }""")
+
+            greeter.greet(1)
+            greeter.greet(2)
+            greeter.greet(3)
+            greeter.greet(1)
+            greeter.greet(2)
+            greeter.greet(3)
+            assert greeter.called == 3
+
+            greeter.greet(100) // Kicks out value '1' from cache
+            assert greeter.called == 4
+
+            greeter.greet(3)
+            assert greeter.called == 4 // Verify value '3' still in cache
+
+            greeter.greet(1)
+            assert greeter.called == 5 // Verify value '1' not in cache anymore
+        }
+    }
+
     def toInstance(String classScript) {
         def clazz = cl.parseClass(classScript)
 

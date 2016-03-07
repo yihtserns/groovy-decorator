@@ -16,6 +16,9 @@
 
 package com.github.yihtserns.groovy.deco
 
+import java.lang.annotation.Retention
+import java.lang.annotation.RetentionPolicy
+import java.lang.annotation.Target
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
@@ -25,7 +28,15 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
  *
  * @author yihtserns
  */
-@MethodDecorator({ func -> func.memoize() })
+@MethodDecorator({ func, memoized ->
+    if (memoized.maxCacheSize) {
+        return func.memoizeAtMost(memoized.maxCacheSize)
+    } else {
+        return func.memoize()
+    }
+})
 @GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
 @interface Memoized {
+
+    int maxCacheSize();
 }

@@ -16,6 +16,7 @@
 package com.github.yihtserns.groovy.deco;
 
 import java.util.List;
+import java.util.Map;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
 import static org.codehaus.groovy.ast.ClassHelper.make;
@@ -32,6 +33,7 @@ import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
+import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import static org.codehaus.groovy.ast.expr.VariableExpression.THIS_EXPRESSION;
@@ -59,14 +61,16 @@ public class DecoratorASTTransformation implements ASTTransformation {
      * <pre>
      * class MyClass {
      *   {
-     *      def _func = Function.create(this, 'method', boolean, [String, int]).decorateWith(new Decorator1._closure(this, this))
+     *      def _func = Function.create(this, 'method', boolean, [String, int])
+     .decorateWith([el1:val1, el2:val2,... elN:valN])(new Decorator1$_closure1(this, this))
      *      this.invokeMethod('metaClass', ({
      *          delegate.method { String x, int y -&gt;
      *              _func([x, y])
      *          }
      *      }) // Supposed to be `this.metaClass { ... }`, but `this.metaClass` got interpreted as `this.getMetaClass()`
 
-     *      def _func = Function.create(this, 'method', boolean, [String, int]).decorateWith(new Decorator2._closure(this, this))
+     *      def _func = Function.create(this, 'method', boolean, [String, int])
+     .decorateWith([:])(new Decorator2$_closure1(this, this))
      *      this.invokeMethod('metaClass', {
      *          delegate.method { String x, int y -&gt;
      *              _func([x, y])
@@ -74,7 +78,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
      *      })
      *   }
      *
-     *  {@code @}Decorator1
+     *  {@code @}Decorator1(el1 = val1, el2 = val2,... elN = valN)
      *  {@code @}Decorator2
      *   boolean method(String x, int y) {
      *     ...
@@ -108,7 +112,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 toTypeList(method.getParameters())));
 
         ConstructorCallExpression newDecorator = ctorX(decoratorClass.getType(), argsX(THIS_EXPRESSION, THIS_EXPRESSION));
-        createFunction = callX(createFunction, "decorateWith", argsX(newDecorator));
+        createFunction = callX(createFunction, "decorateWith", argsX(toMap(annotation.getMembers()), newDecorator));
 
         MethodCallExpression callFunction = callX(funcVar, "call", argsX(toVarList(method.getParameters())));
         VariableScope localVarScope = localVarScopeOf(funcVar);
@@ -158,6 +162,15 @@ public class DecoratorASTTransformation implements ASTTransformation {
         }
 
         return types;
+    }
+
+    private static MapExpression toMap(Map<String, Expression> key2Value) {
+        MapExpression map = new MapExpression();
+        for (Map.Entry<String, Expression> entry : key2Value.entrySet()) {
+            map.addMapEntryExpression(constX(entry.getKey()), entry.getValue());
+        }
+
+        return map;
     }
 
     private static DeclarationExpression declareX(VariableExpression var, Expression initialValue) {

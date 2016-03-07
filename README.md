@@ -15,11 +15,11 @@ import com.github.yihtserns.groovy.deco.MethodDecorator
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 @MethodDecorator({ func -> {
-    { args ->
+    return { args ->
         String username = args[0]
 
         if (username == 'hacker') {
-            throw new UnsupportedOperationException("Hacker not allowed")
+            throw new UnsupportedOperationException("hacker not allowed")
         } else {
             func(args) // Call original method
         }
@@ -43,6 +43,58 @@ class SomeOperation {
 def op = new SomeOperation()
 op.doStuff('good guy', 3) // prints 'good guy: 3'
 op.doStuff('hacker', 1) // throws UnsupportedOperationException
+```
+
+### Using annotation elements
+```groovy
+// Guard.groovy in its own project
+import com.github.yihtserns.groovy.deco.MethodDecorator
+import org.codehaus.groovy.transform.GroovyASTTransformationClass
+
+@MethodDecorator({ func, guard ->
+    String[] prohibited = guard.against ?: ['hacker']
+
+    return { args ->
+        String username = args[0]
+
+        if (prohibited.contains(username)) {
+            throw new UnsupportedOperationException("$username not allowed")
+        } else {
+            func(args) // Call original method
+        }
+    }
+})
+@GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
+@interface Guard {
+
+    String[] against() default ['hacker']
+}
+```
+
+```groovy
+// SomeScript.groovy
+class SomeOperation {
+
+    @Guard
+    public String doStuff(String username, int secretCode) {
+        println "${username}: ${secretCode}"
+    }
+
+    @Guard(against = ['good guy', 'hacker'])
+    public String doSuperSensitiveStuff(String username, int secretCode) {
+        println "${username}: ${secretCode}"
+    }
+}
+
+def op = new SomeOperation()
+
+op.doStuff('admin', 10) // prints 'admin: 10'
+op.doStuff('good guy', 3) // prints 'good guy: 3'
+op.doStuff('hacker', 1) // throws UnsupportedOperationException
+
+op.doSuperSensitiveStuff('admin', 10) // prints 'admin: 10'
+op.doSuperSensitiveStuff('good guy', 3) // throws UnsupportedOperationException
+op.doSuperSensitiveStuff('hacker', 1) // throws UnsupportedOperationException
 ```
 
 Limitations
