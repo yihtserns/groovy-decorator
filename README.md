@@ -14,7 +14,7 @@ Example
 import com.github.yihtserns.groovy.deco.MethodDecorator
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
-@MethodDecorator({ func -> {
+@MethodDecorator({ func ->
     return { args ->
         String username = args[0]
 
