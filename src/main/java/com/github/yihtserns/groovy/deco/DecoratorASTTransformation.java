@@ -15,10 +15,11 @@
  */
 package com.github.yihtserns.groovy.deco;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+import static org.codehaus.groovy.ast.ClassHelper.CLASS_Type;
 import static org.codehaus.groovy.ast.ClassHelper.make;
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -26,6 +27,7 @@ import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
+import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
@@ -33,7 +35,6 @@ import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
-import org.codehaus.groovy.ast.expr.MapExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
 import static org.codehaus.groovy.ast.expr.VariableExpression.THIS_EXPRESSION;
@@ -111,8 +112,11 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 classX(method.getReturnType()),
                 toTypeList(method.getParameters())));
 
+        MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", argsX(classX(annotation.getClassNode())));
         ConstructorCallExpression newDecorator = ctorX(decoratorClass.getType(), argsX(THIS_EXPRESSION, THIS_EXPRESSION));
-        createFunction = callX(createFunction, "decorateWith", argsX(toMap(annotation.getMembers()), newDecorator));
+        createFunction = callX(createFunction, "decorateWith", argsX(
+                getDecoratingAnnotation,
+                newDecorator));
 
         MethodCallExpression callFunction = callX(funcVar, "call", argsX(toVarList(method.getParameters())));
         VariableScope localVarScope = localVarScopeOf(funcVar);
@@ -164,13 +168,13 @@ public class DecoratorASTTransformation implements ASTTransformation {
         return types;
     }
 
-    private static MapExpression toMap(Map<String, Expression> key2Value) {
-        MapExpression map = new MapExpression();
-        for (Map.Entry<String, Expression> entry : key2Value.entrySet()) {
-            map.addMapEntryExpression(constX(entry.getKey()), entry.getValue());
+    private static ArrayExpression toTypes(ClassNode arrayType, Parameter[] parameters) {
+        List<Expression> paramExpressions = new ArrayList<Expression>();
+        for (Parameter parameter : parameters) {
+            paramExpressions.add(classX(parameter.getType()));
         }
 
-        return map;
+        return new ArrayExpression(arrayType, paramExpressions);
     }
 
     private static DeclarationExpression declareX(VariableExpression var, Expression initialValue) {
@@ -210,5 +214,11 @@ public class DecoratorASTTransformation implements ASTTransformation {
 
     private static VariableExpression varX(String variableName) {
         return new VariableExpression(variableName);
+    }
+
+    private static Expression methodX(MethodNode method) {
+        return new MethodCallExpression(classX(method.getDeclaringClass()), "getMethod", argsX(
+                constX(method.getName()),
+                toTypes(CLASS_Type, method.getParameters())));
     }
 }

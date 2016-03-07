@@ -13,6 +13,10 @@ Example
 // Guard.groovy in its own project
 import com.github.yihtserns.groovy.deco.MethodDecorator
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
+import java.lang.annotation.Retention
+import java.lang.annotation.RetentionPolicy
+import java.lang.annotation.Target
+import java.lang.annotation.ElementType
 
 @MethodDecorator({ func ->
     return { args ->
@@ -26,6 +30,8 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
     }
 })
 @GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
 @interface Guard {
 }
 ```
@@ -50,9 +56,13 @@ op.doStuff('hacker', 1) // throws UnsupportedOperationException
 // Guard.groovy in its own project
 import com.github.yihtserns.groovy.deco.MethodDecorator
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
+import java.lang.annotation.Retention
+import java.lang.annotation.RetentionPolicy
+import java.lang.annotation.Target
+import java.lang.annotation.ElementType
 
 @MethodDecorator({ func, guard ->
-    String[] prohibited = guard.against ?: ['hacker']
+    String[] prohibited = guard.against()
 
     return { args ->
         String username = args[0]
@@ -65,6 +75,8 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
     }
 })
 @GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
 @interface Guard {
 
     String[] against() default ['hacker']
