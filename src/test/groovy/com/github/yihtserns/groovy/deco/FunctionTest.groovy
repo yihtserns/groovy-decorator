@@ -200,4 +200,22 @@ class FunctionTest {
         def greeter = clazz.newInstance()
         assert greeter.greet('Noel') == void
     }
+
+    @Test
+    void 'can chain decoration'() {
+        def func = { name -> "Hey $name" }
+        assert func('Noel') == 'Hey Noel'
+
+        func = Function.create(func, 'call', String)
+        assert func(['Noel']) == 'Hey Noel'
+
+        func = func.decorateWith { f -> { args -> "${f(args)}!" } }
+        assert func(['Noel']) == 'Hey Noel!'
+
+        func = func.decorateWith { f -> { args -> "${f(args)}?" } }
+        assert func(['Noel']) == 'Hey Noel!?'
+
+        func = func.decorateWith { f -> { args -> "$f.name : $f.returnType.simpleName -> ${f(args)}" } }
+        assert func(['Noel']) == 'call : String -> Hey Noel!?'
+    }
 }

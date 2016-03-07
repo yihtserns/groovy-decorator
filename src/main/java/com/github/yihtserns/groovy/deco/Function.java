@@ -27,26 +27,26 @@ import org.codehaus.groovy.runtime.InvokerHelper;
  */
 public class Function extends Closure {
 
-    private MetaMethod method;
-    private Object instance;
+    protected Closure delegate;
+    private String methodName;
     private Class<?> returnType;
 
-    public Function(MetaMethod method, Object instance, Class<?> returnType) {
+    private Function(Closure delegate, String methodName, Class<?> returnType) {
         super(null);
-        this.method = method;
-        this.instance = instance;
+        this.delegate = delegate;
+        this.methodName = methodName;
         this.returnType = returnType;
     }
 
     public Object doCall(List<Object> args) {
-        return method.doMethodInvoke(instance, args.toArray(new Object[args.size()]));
+        return delegate.call(args.toArray(new Object[args.size()]));
     }
 
     /**
      * @return method name
      */
     public String getName() {
-        return method.getName();
+        return methodName;
     }
 
     public Class<?> getReturnType() {
@@ -65,7 +65,9 @@ public class Function extends Closure {
     }
 
     public Closure decorateWith(Closure<Closure> decorator) {
-        return decorator.call(this);
+        Closure decorated = decorator.call(this);
+
+        return new DecoratedFunction(decorated, methodName, returnType);
     }
 
     public static Function create(Object instance, String methodName, Class<?> returnType, List<Class> parameterTypes) {
@@ -73,6 +75,38 @@ public class Function extends Closure {
                 methodName,
                 parameterTypes.toArray(new Class[parameterTypes.size()]));
 
-        return new Function(method, instance, returnType);
+        return create(new MetaMethodClosure(method, instance), methodName, returnType);
+    }
+
+    public static Function create(Closure delegate, String methodName, Class<?> returnType) {
+        return new Function(delegate, methodName, returnType);
+    }
+
+    private static final class MetaMethodClosure extends Closure {
+
+        private MetaMethod method;
+        private Object instance;
+
+        public MetaMethodClosure(MetaMethod method, Object instance) {
+            super(null);
+            this.method = method;
+            this.instance = instance;
+        }
+
+        public Object doCall(Object[] args) {
+            return method.doMethodInvoke(instance, args);
+        }
+    }
+
+    private static final class DecoratedFunction extends Function {
+
+        public DecoratedFunction(Closure delegate, String methodName, Class<?> returnType) {
+            super(delegate, methodName, returnType);
+        }
+
+        @Override
+        public Object doCall(List<Object> args) {
+            return delegate.call(args);
+        }
     }
 }
