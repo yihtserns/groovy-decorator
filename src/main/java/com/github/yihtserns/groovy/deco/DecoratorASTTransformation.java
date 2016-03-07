@@ -59,14 +59,14 @@ public class DecoratorASTTransformation implements ASTTransformation {
      * <pre>
      * class MyClass {
      *   {
-     *      def _func = new Decorator1._closure(this, this)(Function.create(this, 'method', boolean, [String, int]))
+     *      def _func = Function.create(this, 'method', boolean, [String, int]).decorateWith(new Decorator1._closure(this, this))
      *      this.invokeMethod('metaClass', ({
      *          delegate.method { String x, int y -&gt;
      *              _func([x, y])
      *          }
      *      }) // Supposed to be `this.metaClass { ... }`, but `this.metaClass` got interpreted as `this.getMetaClass()`
 
-     *      def _func = new Decorator2._closure(this, this)(Function.create(this, 'method', boolean, [String, int]))
+     *      def _func = Function.create(this, 'method', boolean, [String, int]).decorateWith(new Decorator2._closure(this, this))
      *      this.invokeMethod('metaClass', {
      *          delegate.method { String x, int y -&gt;
      *              _func([x, y])
@@ -108,7 +108,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 toTypeList(method.getParameters())));
 
         ConstructorCallExpression newDecorator = ctorX(decoratorClass.getType(), argsX(THIS_EXPRESSION, THIS_EXPRESSION));
-        createFunction = callX(newDecorator, "call", argsX(createFunction));
+        createFunction = callX(createFunction, "decorateWith", argsX(newDecorator));
 
         MethodCallExpression callFunction = callX(funcVar, "call", argsX(toVarList(method.getParameters())));
         VariableScope localVarScope = localVarScopeOf(funcVar);

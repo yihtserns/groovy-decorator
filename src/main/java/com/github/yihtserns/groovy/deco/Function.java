@@ -64,6 +64,10 @@ public class Function extends Closure {
         return super.getProperty(property);
     }
 
+    public Closure decorateWith(Closure<Closure> decorator) {
+        return decorator.call(this);
+    }
+
     public static Function create(Object instance, String methodName, Class<?> returnType, List<Class> parameterTypes) {
         MetaMethod method = InvokerHelper.getMetaClass(instance).pickMethod(
                 methodName,

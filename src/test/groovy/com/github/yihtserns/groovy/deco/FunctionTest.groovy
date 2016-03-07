@@ -17,7 +17,6 @@
 package com.github.yihtserns.groovy.deco
 
 import org.junit.Test
-import static org.junit.Assert.fail
 
 /**
  * @author yihtserns
@@ -31,10 +30,10 @@ class FunctionTest {
         Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
             class Greeter {
                 {
-                    def decorate = { func ->
+                    def decorator = { func ->
                         { args -> func(args) + '!' }
                     }
-                    def func = decorate Function.create(this, 'greet', String, [String])
+                    def func = Function.create(this, 'greet', String, [String]).decorateWith(decorator)
                     this.metaClass {
                         greet { String name ->
                             func([name])
@@ -57,10 +56,10 @@ class FunctionTest {
             class Greeter {
                 {
                     exclaim: {
-                        def decorate = { func ->
+                        def decorator = { func ->
                             { args -> func(args) + '!' }
                         }
-                        def func = decorate Function.create(this, 'greet', String, [String])
+                        def func = Function.create(this, 'greet', String, [String]).decorateWith(decorator)
                         this.metaClass {
                             greet { String name ->
                                 func([name])
@@ -68,10 +67,10 @@ class FunctionTest {
                         }
                     }
                     question: {
-                        def decorate = { func ->
+                        def decorator = { func ->
                             { args -> func(args) + '?' }
                         }
-                        def func = decorate Function.create(this, 'greet', String, [String])
+                        def func = Function.create(this, 'greet', String, [String]).decorateWith(decorator)
                         this.metaClass {
                             greet { String name ->
                                 func([name])
@@ -94,10 +93,10 @@ class FunctionTest {
         Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
             class Greeter {
                 {
-                    def decorate = { func ->
+                    def decorator = { func ->
                         { args -> func(args) + '!' }
                     }
-                    def func = decorate Function.create(this, 'greet', String, [String, int])
+                    def func = Function.create(this, 'greet', String, [String, int]).decorateWith(decorator)
                     this.metaClass {
                         greet { String name, int id ->
                             func([name, id])
@@ -119,17 +118,17 @@ class FunctionTest {
         Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
             class Greeter {
                 {
-                    def decorate = { func ->
+                    def decorator = { func ->
                         { args -> func.name }
                     }
-                    def func = decorate Function.create(this, 'greet', String, [String])
+                    def func = Function.create(this, 'greet', String, [String]).decorateWith(decorator)
                     this.metaClass {
                         greet { String name ->
                             func([name])
                         }
                     }
                 }
-                
+
                 String greet(name) {
 
                 }
@@ -144,10 +143,10 @@ class FunctionTest {
         Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
             class Greeter {
                 {
-                    def decorate = { func ->
+                    def decorator = { func ->
                         { args -> func(args) + '!' }
                     }
-                    def func = decorate Function.create(this, 'greet', String, [String])
+                    def func = Function.create(this, 'greet', String, [String]).decorateWith(decorator)
                     this.metaClass {
                         greet { String name ->
                             func([name])
@@ -175,8 +174,8 @@ class FunctionTest {
             class Greeter {
                 {
                     doNothing: {
-                        def decorate = { func -> { args -> } }
-                        def func = decorate Function.create(this, 'greet', void, [String])
+                        def decorator = { func -> { args -> } }
+                        def func = Function.create(this, 'greet', void, [String]).decorateWith(decorator)
                         this.metaClass {
                             greet { String name ->
                                 func([name])
@@ -184,8 +183,8 @@ class FunctionTest {
                         }
                     }
                     getReturnType: {
-                        def decorate = { func -> { args -> func.returnType } }
-                        def func = decorate Function.create(this, 'greet', void, [String])
+                        def decorator = { func -> { args -> func.returnType } }
+                        def func = Function.create(this, 'greet', void, [String]).decorateWith(decorator)
                         this.metaClass {
                             greet { String name ->
                                 func([name])
