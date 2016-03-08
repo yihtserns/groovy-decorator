@@ -111,14 +111,14 @@ op.doSuperSensitiveStuff('hacker', 1) // throws UnsupportedOperationException
 
 Limitations
 -----------
-### Cannot work with @CompileStatic
+### Cannot work with @CompileStatic for Groovy version < 2.3.9
 An exception will be thrown:
 ```groovy
-General error during class generation: size==0
-
-java.lang.ArrayIndexOutOfBoundsException: size==0
-	at org.codehaus.groovy.classgen.asm.OperandStack.getTopOperand(OperandStack.java:729)
-	at org.codehaus.groovy.classgen.asm.BinaryExpressionHelper.evaluateEqual(BinaryExpressionHelper.java:306)
+java.lang.ArrayIndexOutOfBoundsException: Internal compiler error while compiling script1457454321240940813275.groovy
+Method: MethodNode@1527752119[java.lang.Object doCall(java.lang.Object)]
+Line -1, expecting casting to java.lang.Object but operand stack is empty
+	at org.codehaus.groovy.classgen.asm.OperandStack.doConvertAndCast(OperandStack.java:323)
+	at org.codehaus.groovy.classgen.asm.OperandStack.doGroovyCast(OperandStack.java:290)
 ...
 ```
 
