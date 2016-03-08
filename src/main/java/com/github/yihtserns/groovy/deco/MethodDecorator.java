@@ -28,12 +28,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.ANNOTATION_TYPE)
 public @interface MethodDecorator {
 
-    /**
-     * @return class that contains a static method of {@code call(Closure func, Object[] args)}.
-     * <ul>
-     * <li>{@code func} is the original method body</li>
-     * <li>{@code args} is the arguments passed in by the method caller</li>
-     * </ul>
-     */
     Class<?> value();
 }
