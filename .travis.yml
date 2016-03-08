@@ -3,6 +3,6 @@ jdk:
   - openjdk6
   - oraclejdk7
 env:
-  - GROOVYVERSION=2.2.2
+  - DEFAULT=true
   - GROOVYVERSION=2.4.0
   
