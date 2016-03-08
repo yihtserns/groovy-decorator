@@ -42,7 +42,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <groovy.version>2.2.2</groovy.version>
+        <groovy.version>2.3.9</groovy.version>
     </properties>
 
     <dependencies>
