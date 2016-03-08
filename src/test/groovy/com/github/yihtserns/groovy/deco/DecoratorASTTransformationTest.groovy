@@ -17,17 +17,48 @@
 package com.github.yihtserns.groovy.deco
 
 import org.junit.Test
+import org.junit.experimental.theories.DataPoint
+import org.junit.experimental.theories.Theories
+import org.junit.experimental.theories.Theory
+import org.junit.runner.RunWith
+
+import org.codehaus.groovy.control.CompilerConfiguration
+
+import static org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder.withConfig
 import static org.junit.Assert.fail
 
 /**
  * @author yihtserns
  */
+@RunWith(Theories)
 class DecoratorASTTransformationTest {
 
-    def cl = new GroovyClassLoader()
+    @DataPoint
+    public static def normalInstantiator = toInstantiator(new GroovyClassLoader())
 
-    @Test
-    void 'can decorate'() {
+    @DataPoint
+    public static def compileStaticInstantiator = toInstantiator(
+        new GroovyClassLoader(
+            Thread.currentThread().contextClassLoader,
+            withConfig(new CompilerConfiguration()) { ast(groovy.transform.CompileStatic) }))
+
+    @org.junit.Rule
+    public org.junit.rules.TestRule tempInterceptImpl = { base, desc ->
+        def func = base.&evaluate
+
+        def intercept = desc.getAnnotation(Intercept)
+        if (intercept) {
+            def decorator = intercept.annotationType().getAnnotation(MethodDecorator)
+            def decorate = decorator.value().newInstance(this, this)
+
+            func = decorate(func, intercept)
+        }
+
+        return func as org.junit.runners.model.Statement
+    } as org.junit.rules.TestRule
+
+    @Theory
+    void 'can decorate'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -42,8 +73,8 @@ class DecoratorASTTransformationTest {
         assert instance.greet() == 'Hi!'
     }
 
-    @Test
-    public void 'can decorate method with one param'() {
+    @Theory
+    public void 'can decorate method with one param'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -58,8 +89,8 @@ class DecoratorASTTransformationTest {
         assert instance.greet('Noel') == 'Hi Noel!'
     }
 
-    @Test
-    public void 'can decorate method with three params'() {
+    @Theory
+    public void 'can decorate method with three params'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -77,8 +108,8 @@ class DecoratorASTTransformationTest {
         assert instance.greet('Noel', 3) == 'Hi Noel Hi Noel Hi Noel!'
     }
 
-    @Test
-    public void 'can use three decorators'() {
+    @Theory
+    public void 'can use three decorators'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -95,8 +126,8 @@ class DecoratorASTTransformationTest {
         assert instance.greet('Noel') == 'Hi Mr. Noel!?'
     }
 
-    @Test
-    public void 'can get func metadata'() {
+    @Theory
+    public void 'can get func metadata'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -120,8 +151,8 @@ class DecoratorASTTransformationTest {
         assert instance.bid() == ['bid', int]
     }
 
-    @Test
-    public void 'should throw when decorating annotation not annotated with @MethodDecorator'() {
+    @Theory
+    public void 'should throw when decorating annotation not annotated with @MethodDecorator'(toInstance) {
         try {
             toInstance("""package com.github.yihtserns.groovy.deco
 
@@ -140,8 +171,8 @@ class DecoratorASTTransformationTest {
         }
     }
 
-    @Test
-    public void 'stack trace should show original location of code'() {
+    @Theory
+    public void 'stack trace should show original location of code'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -170,9 +201,10 @@ class DecoratorASTTransformationTest {
     /**
      * Just to add to the possible scenarios that may need to be supported.
      */
-    @Test
-    public void 'can mimic groovy.transform.Memoized'() {
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Exclaim
+    @Intercept({ func, args -> try { func() } catch (Throwable t) { org.junit.Assume.assumeNoException(t) } })
+    @Theory
+    public void 'can mimic groovy.transform.Memoized'(toInstance) {
+        def greeter = toInstance("""import com.github.yihtserns.groovy.deco.Exclaim
             import com.github.yihtserns.groovy.deco.Memoized
 
             class Greeter {
@@ -190,14 +222,13 @@ class DecoratorASTTransformationTest {
                 }
             }""")
 
-        def greeter = clazz.newInstance()
         10.times {
             assert greeter.greet('Noel') == 'Hey Noel!'
         }
     }
 
-    @Test
-    public void 'can reference elements in decorator annotation'() {
+    @Theory
+    public void 'can reference elements in decorator annotation'(toInstance) {
         withoutMaxCacheSize: {
             def greeter = toInstance("""import com.github.yihtserns.groovy.deco.Exclaim
             import com.github.yihtserns.groovy.deco.Memoized
@@ -263,8 +294,9 @@ class DecoratorASTTransformationTest {
         }
     }
 
-    @Test
-    public void 'can work with private method'() {
+    @Intercept({ func, args -> try { func() } catch (Throwable t) { org.junit.Assume.assumeNoException(t) } })
+    @Theory
+    public void 'can work with private method'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -279,54 +311,11 @@ class DecoratorASTTransformationTest {
         assert instance.greet() == 'Hi!'
     }
 
-    @Test
-    public void 'can work with method level static compilation'() {
-        def instance = toInstance("""package com.github.yihtserns.groovy.deco
+    private static Closure toInstantiator(GroovyClassLoader cl) {
+        return { classScript ->
+            def clazz = cl.parseClass(classScript)
 
-            class Greeter {
-
-                @groovy.transform.CompileStatic
-                @Exclaim
-                String greet() {
-                    return 'Hi'
-                }
-            }
-        """)
-
-        assert instance.greet() == 'Hi!'
-    }
-
-    @Test
-    public void 'can work with class level static compilation'() {
-        notImplementedYet {
-            def instance = toInstance("""package com.github.yihtserns.groovy.deco
-
-                @groovy.transform.CompileStatic
-                class Greeter {
-
-                    @Exclaim
-                    String greet() {
-                        return 'Hi'
-                    }
-                }
-            """)
-
-            assert instance.greet() == 'Hi!'
+            return clazz.newInstance()
         }
-    }
-
-    private static void notImplementedYet(run) {
-        try {
-            run()
-        } catch (Throwable e) {
-            org.junit.Assume.assumeNoException(e)
-        }
-        throw new junit.framework.AssertionFailedError("Method is marked as 'not yet implemented' but passes unexpectedly")
-    }
-
-    def toInstance(String classScript) {
-        def clazz = cl.parseClass(classScript)
-
-        return clazz.newInstance()
     }
 }
