@@ -212,7 +212,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
     }
 
     private static Expression methodX(MethodNode method) {
-        return new MethodCallExpression(classX(method.getDeclaringClass()), "getMethod", argsX(
+        return new MethodCallExpression(classX(method.getDeclaringClass()), "getDeclaredMethod", argsX(
                 constX(method.getName()),
                 toTypes(CLASS_Type, method.getParameters())));
     }
