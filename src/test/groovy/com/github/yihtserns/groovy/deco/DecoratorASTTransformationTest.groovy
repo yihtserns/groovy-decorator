@@ -25,7 +25,7 @@ import static org.junit.Assert.fail
 class DecoratorASTTransformationTest {
 
     def cl = new GroovyClassLoader()
-	
+
     @Test
     void 'can decorate'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
@@ -261,6 +261,67 @@ class DecoratorASTTransformationTest {
             greeter.greet(1)
             assert greeter.called == 5 // Verify value '1' not in cache anymore
         }
+    }
+
+    @Test
+    public void 'can work with private method'() {
+        def instance = toInstance("""package com.github.yihtserns.groovy.deco
+
+            class Greeter {
+
+                @Exclaim
+                private String greet() {
+                    return 'Hi'
+                }
+            }
+        """)
+
+        assert instance.greet() == 'Hi!'
+    }
+
+    @Test
+    public void 'can work with method level static compilation'() {
+        def instance = toInstance("""package com.github.yihtserns.groovy.deco
+
+            class Greeter {
+
+                @groovy.transform.CompileStatic
+                @Exclaim
+                String greet() {
+                    return 'Hi'
+                }
+            }
+        """)
+
+        assert instance.greet() == 'Hi!'
+    }
+
+    @Test
+    public void 'can work with class level static compilation'() {
+        notImplementedYet {
+            def instance = toInstance("""package com.github.yihtserns.groovy.deco
+
+                @groovy.transform.CompileStatic
+                class Greeter {
+
+                    @Exclaim
+                    String greet() {
+                        return 'Hi'
+                    }
+                }
+            """)
+
+            assert instance.greet() == 'Hi!'
+        }
+    }
+
+    private static void notImplementedYet(run) {
+        try {
+            run()
+        } catch (Throwable e) {
+            org.junit.Assume.assumeNoException(e)
+        }
+        throw new junit.framework.AssertionFailedError("Method is marked as 'not yet implemented' but passes unexpectedly")
     }
 
     def toInstance(String classScript) {
