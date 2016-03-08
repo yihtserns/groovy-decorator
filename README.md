@@ -61,7 +61,7 @@ import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
 
-@MethodDecorator({ func, guard ->
+@MethodDecorator({ func, Guard guard ->
     String[] prohibited = guard.against()
 
     return { args ->
