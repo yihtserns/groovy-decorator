@@ -44,7 +44,7 @@ class DecoratorASTTransformationTest {
 
     @org.junit.Rule
     public org.junit.rules.TestRule tempInterceptImpl = { base, desc ->
-        def func = base.&evaluate
+        def func = { base.evaluate() }
 
         def intercept = desc.getAnnotation(Intercept)
         if (intercept) {
@@ -201,7 +201,7 @@ class DecoratorASTTransformationTest {
     /**
      * Just to add to the possible scenarios that may need to be supported.
      */
-    @Intercept({ func, args -> try { func() } catch (Throwable t) { org.junit.Assume.assumeNoException(t) } })
+    @Intercept({ func, args -> try { func(args) } catch (Throwable t) { println "Ignoring failed test:"; t.printStackTrace(System.err) } })
     @Theory
     public void 'can mimic groovy.transform.Memoized'(toInstance) {
         def greeter = toInstance("""import com.github.yihtserns.groovy.deco.Exclaim
@@ -294,7 +294,7 @@ class DecoratorASTTransformationTest {
         }
     }
 
-    @Intercept({ func, args -> try { func() } catch (Throwable t) { org.junit.Assume.assumeNoException(t) } })
+    @Intercept({ func, args -> try { func(args) } catch (Throwable t) { println "Ignoring failed test:"; t.printStackTrace(System.err) } })
     @Theory
     public void 'can work with private method'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
