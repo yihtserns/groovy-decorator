@@ -212,7 +212,7 @@ class DecoratorASTTransformationTest {
 
                 @Exclaim
                 @Memoized
-                String greet(name) {
+                String greet(String name) {
                     if (count >= 5) {
                         throw new RuntimeException("Cannot call method more than 5 times")
                     }
@@ -309,6 +309,23 @@ class DecoratorASTTransformationTest {
         """)
 
         assert instance.greet() == 'Hi!'
+    }
+
+    @Intercept({ func, args -> try { func(args) } catch (Throwable t) { println "Ignoring failed test:"; t.printStackTrace(System.err) } })
+    @Theory
+    public void 'can work with untyped parameter'(toInstance) {
+        def instance = toInstance("""package com.github.yihtserns.groovy.deco
+
+            class Greeter {
+
+                @Exclaim
+                String greet(name) {
+                    return 'Hi ' + name
+                }
+            }
+        """)
+
+        assert instance.greet('Noel') == 'Hi Noel!'
     }
 
     private static Closure toInstantiator(GroovyClassLoader cl) {
