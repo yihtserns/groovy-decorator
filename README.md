@@ -109,6 +109,32 @@ op.doSuperSensitiveStuff('good guy', 3) // throws UnsupportedOperationException
 op.doSuperSensitiveStuff('hacker', 1) // throws UnsupportedOperationException
 ```
 
+### Ad-hoc method decoration
+```groovy
+// SomeScript.groovy
+import com.github.yihtserns.groovy.deco.Intercept
+
+class SomeOperation {
+
+    @Intercept({ func, args ->
+        String username = args[0]
+
+        if (username == 'hacker') {
+            throw new UnsupportedOperationException("hacker not allowed")
+        } else {
+            func(args) // Call original method
+        }
+    })
+    public String doStuff(String username, int secretCode) {
+        println "${username}: ${secretCode}"
+    }
+}
+
+def op = new SomeOperation()
+op.doStuff('good guy', 3) // prints 'good guy: 3'
+op.doStuff('hacker', 1) // throws UnsupportedOperationException
+```
+
 Limitations
 -----------
 ### Cannot work with @CompileStatic for Groovy version < 2.3.9
