@@ -4,5 +4,6 @@ jdk:
   - oraclejdk7
 env:
   - DEFAULT=true
+  - GROOVYVERSION=2.2.2
   - GROOVYVERSION=2.4.0
   
