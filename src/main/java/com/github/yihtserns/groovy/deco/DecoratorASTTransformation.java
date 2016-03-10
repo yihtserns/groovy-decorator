@@ -15,7 +15,6 @@
  */
 package com.github.yihtserns.groovy.deco;
 
-import static groovyjarjarasm.asm.Opcodes.ACC_PRIVATE;
 import java.util.ArrayList;
 import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
@@ -147,7 +146,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
         // Move original method's body into a new method
         MethodNode decoratedMethod = clazz.addMethod(
                 "decorated$" + normalizedMethodName,
-                ACC_PRIVATE,
+                MethodNode.ACC_PRIVATE,
                 method.getReturnType(),
                 method.getParameters(),
                 method.getExceptions(),
@@ -180,7 +179,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
             createFunction = callX(createFunction, "decorateWith", argsX(
                     getDecoratingAnnotation,
                     newDecorator));
-            funcField = clazz.addField(decoratingFieldName, ACC_PRIVATE, make(Function.class), createFunction);
+            funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), createFunction);
         }
 
         // Replace original method's body with one that calls the closure
