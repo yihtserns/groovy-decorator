@@ -146,8 +146,3 @@ Line -1, expecting casting to java.lang.Object but operand stack is empty
 	at org.codehaus.groovy.classgen.asm.OperandStack.doGroovyCast(OperandStack.java:290)
 ...
 ```
-
-Gotcha
-------
-### Does not work on private method for Groovy version >= 2.4.0
-Due to [GROOVY-7368](https://issues.apache.org/jira/browse/GROOVY-7368).
