@@ -159,7 +159,21 @@ public class DecoratorASTTransformation implements ASTTransformation {
         StringBuilder decoratingFieldNameBuilder = new StringBuilder("decorating$");
         decoratingFieldNameBuilder.append(method.getName().replaceAll("\\W", "\\$"));
         for (Parameter parameter : method.getParameters()) {
-            decoratingFieldNameBuilder.append(parameter.getType().getNameWithoutPackage());
+            ClassNode type = parameter.getType();
+
+            String typeName;
+            if (type.isArray()) {
+                StringBuilder typeNameBuilder = new StringBuilder();
+                ClassNode currentType = type;
+                while (currentType.isArray()) {
+                    typeNameBuilder.append("Array");
+                    currentType = currentType.getComponentType();
+                }
+                typeName = typeNameBuilder.insert(0, currentType.getNameWithoutPackage()).toString();
+            } else {
+                typeName = type.getNameWithoutPackage();
+            }
+            decoratingFieldNameBuilder.append(typeName);
         }
         String decoratingFieldName = decoratingFieldNameBuilder.toString();
 

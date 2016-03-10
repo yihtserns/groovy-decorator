@@ -309,6 +309,30 @@ class DecoratorASTTransformationTest {
         assert instance.greet('Noel') == 'Hi Noel!'
     }
 
+    @Theory
+    public void 'can handle array-type parameter'(toInstance) {
+        def instance = toInstance("""package com.github.yihtserns.groovy.deco
+
+            class Greeter {
+                @Exclaim
+                String greet(String[] names) {
+                    return 'Hi '+ names.join(', ')
+                }
+
+                @Question
+                String greet(String[][] namesGroups) {
+                    return namesGroups.collect { String[] group ->
+                        return 'Hi ' + group.join(', ') + '.'
+                    }.join(' ')
+                }
+            }
+        """)
+
+        assert instance.greet(['Noel', 'Patrick', 'Stella'] as String[]) == 'Hi Noel, Patrick, Stella!'
+        assert instance.greet([['Noel', 'Patrick'], ['Stella']] as String[][]) == 'Hi Noel, Patrick. Hi Stella.?'
+
+    }
+
     private static Closure toInstantiator(GroovyClassLoader cl) {
         return { classScript ->
             def clazz = cl.parseClass(classScript)
