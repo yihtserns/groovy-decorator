@@ -16,21 +16,44 @@
 
 package com.github.yihtserns.groovy.deco
 
+import org.codehaus.groovy.control.CompilerConfiguration
 import org.junit.Test
+
+import static org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder.withConfig
 
 /**
  * @author yihtserns
  */
 class InterceptTest {
 
-    def cl = new GroovyClassLoader()
-
     @Test
     void 'can decorate method on the fly'() {
+        def cl = new GroovyClassLoader()
         Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Intercept
             class Greeter {
 
                 @Intercept({ func, args -> func(args) + '!' })
+                String greet(name) {
+                    return 'Hey ' + name
+                }
+            }""")
+
+        def greeter = clazz.newInstance()
+        assert greeter.greet('Noel') == 'Hey Noel!'
+    }
+
+    @Test
+    void 'can decorate method on the fly when statically compiled'() {
+        def cl = new GroovyClassLoader(
+            Thread.currentThread().contextClassLoader,
+            withConfig(new CompilerConfiguration()) { ast(groovy.transform.CompileStatic) })
+
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Intercept
+            import com.github.yihtserns.groovy.deco.Function
+
+            class Greeter {
+
+                @Intercept({ Function func, args -> String.valueOf(func(args)) + '!' })
                 String greet(name) {
                     return 'Hey ' + name
                 }
