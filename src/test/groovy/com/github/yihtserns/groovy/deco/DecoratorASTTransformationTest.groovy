@@ -330,7 +330,33 @@ class DecoratorASTTransformationTest {
 
         assert instance.greet(['Noel', 'Patrick', 'Stella'] as String[]) == 'Hi Noel, Patrick, Stella!'
         assert instance.greet([['Noel', 'Patrick'], ['Stella']] as String[][]) == 'Hi Noel, Patrick. Hi Stella.?'
+    }
 
+    @Theory
+    public void 'can handle multiple methods with parameter with same class name'(toInstance) {
+        def instance = toInstance("""package com.github.yihtserns.groovy.deco
+
+            class Greeter {
+                @Exclaim
+                String run(x.Input input) {
+                    return input.class.name
+                }
+
+                @Question
+                String run(y.Input input) {
+                    return input.class.name
+                }
+
+                @Intercept({ Function func, args -> func(args).toString() + '.' })
+                String run(z.Input input) {
+                    return input.class.name
+                }
+            }
+        """)
+
+        assert instance.run(new x.Input()) == 'x.Input!'
+        assert instance.run(new y.Input()) == 'y.Input?'
+        assert instance.run(new z.Input()) == 'z.Input.'
     }
 
     private static Closure toInstantiator(GroovyClassLoader cl) {

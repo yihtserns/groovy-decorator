@@ -54,6 +54,8 @@ import org.codehaus.groovy.transform.GroovyASTTransformation;
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 public class DecoratorASTTransformation implements ASTTransformation {
 
+    private static final String METHOD_NODE_METADATA_KEY = "decoratedMethodNode";
+
     /**
      * Turns:
      * <pre>
@@ -178,6 +180,11 @@ public class DecoratorASTTransformation implements ASTTransformation {
         String decoratingFieldName = decoratingFieldNameBuilder.toString();
 
         FieldNode funcField = clazz.getField(decoratingFieldName);
+        while (funcField != null && !method.equals(funcField.getNodeMetaData(METHOD_NODE_METADATA_KEY))) {
+            decoratingFieldName = "_" + decoratingFieldName;
+            funcField = clazz.getField(decoratingFieldName);
+        }
+
         if (funcField != null) {
             Expression funcValue = funcField.getInitialValueExpression();
             funcValue = callX(funcValue, "decorateWith", argsX(
@@ -199,6 +206,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
                     getDecoratingAnnotation,
                     newDecorator));
             funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), createFunction);
+            funcField.setNodeMetaData(METHOD_NODE_METADATA_KEY, method);
         }
 
         // Replace original method's body with one that calls the closure
