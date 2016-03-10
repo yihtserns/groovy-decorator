@@ -141,11 +141,10 @@ public class DecoratorASTTransformation implements ASTTransformation {
         }
 
         ClassNode clazz = method.getDeclaringClass();
-        String normalizedMethodName = normalize(method);
 
         // Move original method's body into a new method
         MethodNode decoratedMethod = clazz.addMethod(
-                "decorated$" + normalizedMethodName,
+                "decorated$" + method.getName(),
                 MethodNode.ACC_PRIVATE,
                 method.getReturnType(),
                 method.getParameters(),
@@ -157,7 +156,13 @@ public class DecoratorASTTransformation implements ASTTransformation {
         MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", argsX(classX(annotation.getClassNode())));
         ConstructorCallExpression newDecorator = ctorX(decoratorClass.getType(), argsX(THIS_EXPRESSION, THIS_EXPRESSION));
 
-        String decoratingFieldName = "decorating$" + normalizedMethodName;
+        StringBuilder decoratingFieldNameBuilder = new StringBuilder("decorating$");
+        decoratingFieldNameBuilder.append(method.getName().replaceAll("\\W", "\\$"));
+        for (Parameter parameter : method.getParameters()) {
+            decoratingFieldNameBuilder.append(parameter.getType().getNameWithoutPackage());
+        }
+        String decoratingFieldName = decoratingFieldNameBuilder.toString();
+
         FieldNode funcField = clazz.getField(decoratingFieldName);
         if (funcField != null) {
             Expression funcValue = funcField.getInitialValueExpression();
@@ -266,14 +271,5 @@ public class DecoratorASTTransformation implements ASTTransformation {
         }
 
         return args;
-    }
-
-    private static String normalize(MethodNode method) {
-        StringBuilder normalizedMethodName = new StringBuilder(method.getName().replaceAll("\\W", "\\$"));
-        for (Parameter parameter : method.getParameters()) {
-            normalizedMethodName.append(parameter.getType().getNameWithoutPackage());
-        }
-
-        return normalizedMethodName.toString();
     }
 }
