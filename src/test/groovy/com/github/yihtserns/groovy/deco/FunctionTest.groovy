@@ -23,182 +23,28 @@ import org.junit.Test
  */
 class FunctionTest {
 
-    def cl = new GroovyClassLoader()
-
     @Test
-    void 'can decorate method using one decorator'() {
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
-            class Greeter {
-                {
-                    def decorator = { func ->
-                        { args -> func(args) + '!' }
-                    }
-                    def func = Function.create(this, 'greet', String, [String] as Class[]).decorateWith(decorator)
-                    this.metaClass {
-                        greet { String name ->
-                            func([name])
-                        }
-                    }
-                }
+    void 'can decorate using one decorator'() {
+        def func = { name -> 'Hey ' + name }
+        func = Function.create(func, 'greet', String)
+        func = func.decorateWith { f ->
+            return { args -> f(args) + '!' }
+        }
 
-                String greet(name) {
-                    return 'Hey ' + name
-                }
-            }""")
-
-        def greeter = clazz.newInstance()
-        assert greeter.greet('Noel') == 'Hey Noel!'
-    }
-
-    @Test
-    void 'can decorate method using two decorators'() {
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
-            class Greeter {
-                {
-                    exclaim: {
-                        def decorator = { func ->
-                            { args -> func(args) + '!' }
-                        }
-                        def func = Function.create(this, 'greet', String, [String] as Class[]).decorateWith(decorator)
-                        this.metaClass {
-                            greet { String name ->
-                                func([name])
-                            }
-                        }
-                    }
-                    question: {
-                        def decorator = { func ->
-                            { args -> func(args) + '?' }
-                        }
-                        def func = Function.create(this, 'greet', String, [String] as Class[]).decorateWith(decorator)
-                        this.metaClass {
-                            greet { String name ->
-                                func([name])
-                            }
-                        }
-                    }
-                }
-
-                String greet(name) {
-                    return 'Hey ' + name
-                }
-            }""")
-
-        def greeter = clazz.newInstance()
-        assert greeter.greet('Noel') == 'Hey Noel!?'
-    }
-
-    @Test
-    void 'can decorate method with two params'() {
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
-            class Greeter {
-                {
-                    def decorator = { func ->
-                        { args -> func(args) + '!' }
-                    }
-                    def func = Function.create(this, 'greet', String, [String, int] as Class[]).decorateWith(decorator)
-                    this.metaClass {
-                        greet { String name, int id ->
-                            func([name, id])
-                        }
-                    }
-                }
-
-                String greet(name, id) {
-                    return 'Hey ' + name + ' ' + id
-                }
-            }""")
-
-        def greeter = clazz.newInstance()
-        assert greeter.greet('Noel', 300) == 'Hey Noel 300!'
+        assert func(['Noel']) == 'Hey Noel!'
     }
 
     @Test
     void 'can get method name'() {
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
-            class Greeter {
-                {
-                    def decorator = { func ->
-                        { args -> func.name }
-                    }
-                    def func = Function.create(this, 'greet', String, [String] as Class[]).decorateWith(decorator)
-                    this.metaClass {
-                        greet { String name ->
-                            func([name])
-                        }
-                    }
-                }
+        final String methodName = 'greet'
 
-                String greet(name) {
+        def func = { }
+        func = Function.create(func, methodName, String)
+        func = func.decorateWith { f ->
+            { args -> f.name }
+        }
 
-                }
-            }""")
-
-        def greeter = clazz.newInstance()
-        assert greeter.greet('Noel') == 'greet'
-    }
-
-    @Test
-    void 'decorator works when decorated method is called from a subclass'() {
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
-            class Greeter {
-                {
-                    def decorator = { func ->
-                        { args -> func(args) + '!' }
-                    }
-                    def func = Function.create(this, 'greet', String, [String] as Class[]).decorateWith(decorator)
-                    this.metaClass {
-                        greet { String name ->
-                            func([name])
-                        }
-                    }
-                }
-
-                String greet(name) {
-                    return 'Hey ' + name
-                }
-
-                static class Greeter2 extends Greeter {
-                }
-            }""")
-
-        def clazz2 = clazz.getClasses()[0]
-
-        def greeter2 = clazz2.newInstance()
-        assert greeter2.greet('Noel') == 'Hey Noel!'
-    }
-
-    @Test
-    void "should return original method's return type"() {
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Function
-            class Greeter {
-                {
-                    doNothing: {
-                        def decorator = { func -> { args -> } }
-                        def func = Function.create(this, 'greet', void, [String] as Class[]).decorateWith(decorator)
-                        this.metaClass {
-                            greet { String name ->
-                                func([name])
-                            }
-                        }
-                    }
-                    getReturnType: {
-                        def decorator = { func -> { args -> func.returnType } }
-                        def func = Function.create(this, 'greet', void, [String] as Class[]).decorateWith(decorator)
-                        this.metaClass {
-                            greet { String name ->
-                                func([name])
-                            }
-                        }
-                    }
-                }
-
-                void greet(name) {
-                }
-            }""")
-
-        def greeter = clazz.newInstance()
-        assert greeter.greet('Noel') == void
+        assert func(['Noel']) == methodName
     }
 
     @Test
@@ -217,6 +63,17 @@ class FunctionTest {
 
         func = func.decorateWith { f -> { args -> "$f.name : $f.returnType.simpleName -> ${f(args)}" } }
         assert func(['Noel']) == 'call : String -> Hey Noel!?'
+    }
+
+    @Test
+    void 'can decorate for two params'() {
+        def func = { name, id -> 'Hey ' + name + ' ' + id }
+        func = Function.create(func, 'greet', String)
+        func = func.decorateWith { f ->
+            { args -> f(args) + '!' }
+        }
+
+        assert func(['Noel', 300]) == 'Hey Noel 300!'
     }
 
     @Test

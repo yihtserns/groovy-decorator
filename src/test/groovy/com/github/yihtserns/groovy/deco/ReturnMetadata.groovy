@@ -24,7 +24,18 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
  *
  * @author yihtserns
  */
-@MethodDecorator({ func -> { args -> [func.name, func.returnType] } })
+@MethodDecorator({ func ->
+    return { args ->
+        switch (func.returnType) {
+            case String:
+                return "$func.name: $func.returnType.simpleName"
+            case int:
+                return func.name.length()
+            default:
+                throw new UnsupportedOperationException("Unsupported type: " + func.returnType)
+        }
+    }
+})
 @GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
 @interface ReturnMetadata {
 }

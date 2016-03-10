@@ -16,9 +16,7 @@
 package com.github.yihtserns.groovy.deco;
 
 import groovy.lang.Closure;
-import groovy.lang.MetaMethod;
 import java.util.List;
-import org.codehaus.groovy.runtime.InvokerHelper;
 
 /**
  * Since I can't set any property to a {@code Closure}, I use this wrapper class to do it.
@@ -77,32 +75,8 @@ public class Function extends Closure {
         return new DecoratedFunction(decorated, methodName, returnType);
     }
 
-    public static Function create(Object instance, String methodName, Class<?> returnType, Class[] parameterTypes) {
-        MetaMethod method = InvokerHelper.getMetaClass(instance).pickMethod(
-                methodName,
-                parameterTypes);
-
-        return create(new MetaMethodClosure(method, instance), methodName, returnType);
-    }
-
     public static Function create(Closure delegate, String methodName, Class<?> returnType) {
         return new Function(delegate, methodName, returnType);
-    }
-
-    private static final class MetaMethodClosure extends Closure {
-
-        private MetaMethod method;
-        private Object instance;
-
-        public MetaMethodClosure(MetaMethod method, Object instance) {
-            super(null);
-            this.method = method;
-            this.instance = instance;
-        }
-
-        public Object doCall(Object[] args) {
-            return method.doMethodInvoke(instance, args);
-        }
     }
 
     private static final class DecoratedFunction extends Function {

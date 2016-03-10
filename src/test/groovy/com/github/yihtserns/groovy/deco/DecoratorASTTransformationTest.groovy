@@ -42,21 +42,6 @@ class DecoratorASTTransformationTest {
             Thread.currentThread().contextClassLoader,
             withConfig(new CompilerConfiguration()) { ast(groovy.transform.CompileStatic) }))
 
-    @org.junit.Rule
-    public org.junit.rules.TestRule tempInterceptImpl = { base, desc ->
-        def func = { base.evaluate() }
-
-        def intercept = desc.getAnnotation(Intercept)
-        if (intercept) {
-            def decorator = intercept.annotationType().getAnnotation(MethodDecorator)
-            def decorate = decorator.value().newInstance(this, this)
-
-            func = decorate(func, intercept)
-        }
-
-        return func as org.junit.runners.model.Statement
-    } as org.junit.rules.TestRule
-
     @Theory
     void 'can decorate'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
@@ -140,15 +125,15 @@ class DecoratorASTTransformationTest {
                 String farewell(String name, int count) {
                 }
 
-                @ReturnMetadata
-                int bid() {
+                @ReturnMetadata // returns number of characters in method name
+                int bidding() {
                 }
             }
         """)
 
-        assert instance.greet('Noel') == ['greet', String]
-        assert instance.farewell('Noel', 3) == ['farewell', String]
-        assert instance.bid() == ['bid', int]
+        assert instance.greet('Noel') == 'greet: String'
+        assert instance.farewell('Noel', 3) == 'farewell: String'
+        assert instance.bidding() == 'bidding'.length()
     }
 
     @Theory
@@ -192,7 +177,6 @@ class DecoratorASTTransformationTest {
             def sanitizedEx = org.codehaus.groovy.runtime.StackTraceUtils.deepSanitize(ex)
             sanitizedEx.stackTrace[0].with {
                 assert it.className == 'com.github.yihtserns.groovy.deco.Greeter'
-                assert it.methodName == 'greet'
                 assert it.lineNumber == 8
             }
         }
@@ -201,7 +185,6 @@ class DecoratorASTTransformationTest {
     /**
      * Just to add to the possible scenarios that may need to be supported.
      */
-    @Intercept({ func, args -> try { func(args) } catch (Throwable t) { println "Ignoring failed test:"; t.printStackTrace(System.err) } })
     @Theory
     public void 'can mimic groovy.transform.Memoized'(toInstance) {
         def greeter = toInstance("""import com.github.yihtserns.groovy.deco.Exclaim
@@ -294,7 +277,6 @@ class DecoratorASTTransformationTest {
         }
     }
 
-    @Intercept({ func, args -> try { func(args) } catch (Throwable t) { println "Ignoring failed test:"; t.printStackTrace(System.err) } })
     @Theory
     public void 'can work with private method'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
@@ -311,7 +293,6 @@ class DecoratorASTTransformationTest {
         assert instance.greet() == 'Hi!'
     }
 
-    @Intercept({ func, args -> try { func(args) } catch (Throwable t) { println "Ignoring failed test:"; t.printStackTrace(System.err) } })
     @Theory
     public void 'can work with untyped parameter'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco

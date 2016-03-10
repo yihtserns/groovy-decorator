@@ -15,6 +15,7 @@
  */
 package com.github.yihtserns.groovy.deco;
 
+import static groovyjarjarasm.asm.Opcodes.ACC_PRIVATE;
 import java.util.ArrayList;
 import java.util.List;
 import org.codehaus.groovy.ast.ASTNode;
@@ -22,9 +23,9 @@ import org.codehaus.groovy.ast.AnnotationNode;
 import static org.codehaus.groovy.ast.ClassHelper.CLASS_Type;
 import static org.codehaus.groovy.ast.ClassHelper.make;
 import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
 import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.Variable;
 import org.codehaus.groovy.ast.VariableScope;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
@@ -32,8 +33,8 @@ import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
-import org.codehaus.groovy.ast.expr.DeclarationExpression;
 import org.codehaus.groovy.ast.expr.Expression;
+import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
 import org.codehaus.groovy.ast.expr.VariableExpression;
@@ -44,8 +45,6 @@ import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SimpleMessage;
-import org.codehaus.groovy.syntax.Token;
-import org.codehaus.groovy.syntax.Types;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 
@@ -56,36 +55,73 @@ import org.codehaus.groovy.transform.GroovyASTTransformation;
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 public class DecoratorASTTransformation implements ASTTransformation {
 
-    private static final Token EQUAL_TOKEN = Token.newSymbol(Types.EQUAL, -1, -1);
-
     /**
+     * Turns:
      * <pre>
      * class MyClass {
-     *   {
-     *      def _func = Function.create(this, 'method', boolean, [String, int] as Class[])
-     *                          .decorateWith(
-     *                               MyClass.getMethod('method', [String, int] as Class[]).getAnnotation(Decorator1.class),
-     *                               new Decorator1$_closure1(this, this))
-     *      this.invokeMethod('metaClass', ({
-     *          delegate.method { String x, int y -&gt;
-     *              _func([x, y])
-     *          }
-     *      }) // Supposed to be `this.metaClass { ... }`, but `this.metaClass` got interpreted as `this.getMetaClass()`
-     *
-     *      def _func = Function.create(this, 'method', boolean, [String, int] as Class[])
-     *                          .decorateWith(
-     *                               MyClass.getMethod('method', [String, int] as Class[]).getAnnotation(Decorator2.class),
-     *                               new Decorator2$_closure1(this, this))
-     *      this.invokeMethod('metaClass', {
-     *          delegate.method { String x, int y -&gt;
-     *              _func([x, y])
-     *          }
-     *      })
-     *   }
      *
      *  {@code @}Decorator1(el1 = val1, el2 = val2,... elN = valN)
      *  {@code @}Decorator2
      *   boolean method(String x, int y) {
+     *     ...
+     *   }
+     *
+     *  {@code @}Decorator1
+     *   String method(x.Input input1, y.Input input2) {
+     *     ...
+     *   }
+     *
+     *  {@code @}Decorator1
+     *   String method(y.Input input1, x.Input input2) {
+     *     ...
+     *   }
+     * }
+     * </pre>
+     * into:
+     * <pre>
+     * class MyClass {
+     *
+     *   private Function decorating$methodStringint = Function.create({ String x, int y -> decorated$method(x, y) }, boolean)
+     *                                                        .decorateWith(
+     *                                                              MyClass.getDeclaredMethod('method', [String, int] as Class[]).getAnnotation(Decorator1.class),
+     *                                                              new Decorator1$_closure1(this, this))
+     *                                                        .decorateWith(
+     *                                                              MyClass.getDeclaredMethod('method', [String, int] as Class[]).getAnnotation(Decorator2.class),
+     *                                                              new Decorator2$_closure1(this, this))
+     *   private Function decorating$methodInputInput = Function.create({ x.Input input1, y.Input input2 -> decorated$method(input1, input2) }, String)
+     *                                                        .decorateWith(
+     *                                                              MyClass.getDeclaredMethod('method', [x.Input, y.Input] as Class[]).getAnnotation(Decorator1.class),
+     *                                                              new Decorator1$_closure1(this, this))
+     *   private Function _decorating$methodInputInput = Function.create({ y.Input input1, x.Input input2 -> decorated$method(input1, input2) }, String)
+     *                                                        .decorateWith(
+     *                                                              MyClass.getDeclaredMethod('method', [y.Input, x.Input] as Class[]).getAnnotation(Decorator1.class),
+     *                                                              new Decorator1$_closure1(this, this))
+     *
+     *  {@code @}Decorator1(el1 = val1, el2 = val2,... elN = valN)
+     *  {@code @}Decorator2
+     *   boolean method(String x, int y) {
+     *     decorating$methodStringint([x, y])
+     *   }
+     *
+     *   private boolean decorated$method(String x, int y) {
+     *     ...
+     *   }
+     *
+     *  {@code @}Decorator1
+     *   String method(x.Input input1, y.Input input2) {
+     *     decorating$methodInputInput(input1, input2)
+     *   }
+     *
+     *   private String decorated$method(x.Input input1, y.Input input2) {
+     *     ...
+     *   }
+     *
+     *  {@code @}Decorator1
+     *   String method(y.Input input1, x.Input input2) {
+     *     _decorating$methodInputInput(input1, input2)
+     *   }
+     *
+     *   private String decorated$method(y.Input input1, x.Input input2) {
      *     ...
      *   }
      * }
@@ -105,44 +141,51 @@ public class DecoratorASTTransformation implements ASTTransformation {
             return;
         }
 
-        AnnotationNode methodDecorator = methodDecorators.get(0);
-        ClassExpression decoratorClass = (ClassExpression) methodDecorator.getMember("value");
+        ClassNode clazz = method.getDeclaringClass();
+        String normalizedMethodName = normalize(method);
 
-        VariableExpression funcVar = varX("_func");
-        funcVar.setClosureSharedVariable(true);
-        MethodCallExpression createFunction = callX(classX(Function.class), "create", argsX(
-                THIS_EXPRESSION,
-                constX(method.getName()),
-                classX(method.getReturnType()),
-                toTypes(CLASS_Type, method.getParameters())));
+        // Move original method's body into a new method
+        MethodNode decoratedMethod = clazz.addMethod(
+                "decorated$" + normalizedMethodName,
+                ACC_PRIVATE,
+                method.getReturnType(),
+                method.getParameters(),
+                method.getExceptions(),
+                method.getCode());
+
+        ClassExpression decoratorClass = (ClassExpression) methodDecorators.get(0).getMember("value");
 
         MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", argsX(classX(annotation.getClassNode())));
         ConstructorCallExpression newDecorator = ctorX(decoratorClass.getType(), argsX(THIS_EXPRESSION, THIS_EXPRESSION));
-        createFunction = callX(createFunction, "decorateWith", argsX(
-                getDecoratingAnnotation,
-                newDecorator));
 
-        MethodCallExpression callFunction = callX(funcVar, "call", argsX(toVarList(method.getParameters())));
-        VariableScope localVarScope = localVarScopeOf(funcVar);
+        String decoratingFieldName = "decorating$" + normalizedMethodName;
+        FieldNode funcField = clazz.getField(decoratingFieldName);
+        if (funcField != null) {
+            Expression funcValue = funcField.getInitialValueExpression();
+            funcValue = callX(funcValue, "decorateWith", argsX(
+                    getDecoratingAnnotation,
+                    newDecorator));
 
-        ClosureExpression methodInterceptor = closureX(method.getParameters(), stmtS(callFunction), localVarScope);
-        MethodCallExpression declareMethodInterceptor = callX(varX("delegate"), method.getName(), argsX(methodInterceptor));
-
-        Statement initializeMethodInterception = stmtS(
-                declareX(funcVar, createFunction),
-                callX(THIS_EXPRESSION, "invokeMethod", argsX(
-                                constX("metaClass"),
-                                closureX(Parameter.EMPTY_ARRAY, stmtS(declareMethodInterceptor), localVarScope))));
-        method.getDeclaringClass().addObjectInitializerStatements(initializeMethodInterception);
-    }
-
-    private static VariableScope localVarScopeOf(Variable... variables) {
-        VariableScope varScope = new VariableScope();
-        for (Variable variable : variables) {
-            varScope.putReferencedLocalVariable(variable);
+            funcField.setInitialValueExpression(funcValue);
+        } else {
+            // Create closure that calls the new method
+            ClosureExpression callDecoratedMethod = closureX(
+                    method.getParameters(),
+                    stmtS(callX(THIS_EXPRESSION, decoratedMethod.getName(), toArgs(method.getParameters()))),
+                    new VariableScope());
+            MethodCallExpression createFunction = callX(classX(Function.class), "create", argsX(
+                    callDecoratedMethod,
+                    constX(method.getName()),
+                    classX(method.getReturnType())));
+            createFunction = callX(createFunction, "decorateWith", argsX(
+                    getDecoratingAnnotation,
+                    newDecorator));
+            funcField = clazz.addField(decoratingFieldName, ACC_PRIVATE, make(Function.class), createFunction);
         }
 
-        return varScope;
+        // Replace original method's body with one that calls the closure
+        MethodCallExpression callFunction = callX(fieldX(funcField), "call", argsX(toVarList(method.getParameters())));
+        method.setCode(stmtS(callFunction));
     }
 
     private static Statement stmtS(Expression... expressions) {
@@ -170,10 +213,6 @@ public class DecoratorASTTransformation implements ASTTransformation {
         }
 
         return new ArrayExpression(arrayType, paramExpressions);
-    }
-
-    private static DeclarationExpression declareX(VariableExpression var, Expression initialValue) {
-        return new DeclarationExpression(var, EQUAL_TOKEN, initialValue);
     }
 
     private static ClosureExpression closureX(Parameter[] parameters, Statement body, VariableScope varScope) {
@@ -215,5 +254,27 @@ public class DecoratorASTTransformation implements ASTTransformation {
         return new MethodCallExpression(classX(method.getDeclaringClass()), "getDeclaredMethod", argsX(
                 constX(method.getName()),
                 toTypes(CLASS_Type, method.getParameters())));
+    }
+
+    private static FieldExpression fieldX(FieldNode field) {
+        return new FieldExpression(field);
+    }
+
+    private static ArgumentListExpression toArgs(Parameter[] parameters) {
+        ArgumentListExpression args = new ArgumentListExpression();
+        for (Parameter parameter : parameters) {
+            args.addExpression(varX(parameter.getName()));
+        }
+
+        return args;
+    }
+
+    private static String normalize(MethodNode method) {
+        StringBuilder normalizedMethodName = new StringBuilder(method.getName().replaceAll("\\W", "\\$"));
+        for (Parameter parameter : method.getParameters()) {
+            normalizedMethodName.append(parameter.getType().getNameWithoutPackage());
+        }
+
+        return normalizedMethodName.toString();
     }
 }
