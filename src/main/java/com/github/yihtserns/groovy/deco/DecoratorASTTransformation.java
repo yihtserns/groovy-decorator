@@ -51,7 +51,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformation;
  *
  * @author yihtserns
  */
-@GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
+@GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 public class DecoratorASTTransformation implements ASTTransformation {
 
     private static final String METHOD_NODE_METADATA_KEY = "decoratedMethodNode";
