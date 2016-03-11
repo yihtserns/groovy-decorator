@@ -18,42 +18,45 @@ package com.github.yihtserns.groovy.deco
 
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
 
 import static org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder.withConfig
 
 /**
  * @author yihtserns
  */
+@RunWith(Parameterized)
 class InterceptTest {
 
-    @Test
-    void 'can decorate method on the fly'() {
-        def cl = new GroovyClassLoader()
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Intercept
-            class Greeter {
-
-                @Intercept({ func, args -> func(args) + '!' })
-                String greet(name) {
-                    return 'Hey ' + name
-                }
-            }""")
-
-        def greeter = clazz.newInstance()
-        assert greeter.greet('Noel') == 'Hey Noel!'
-    }
-
-    @Test
-    void 'can decorate method on the fly when statically compiled'() {
-        def cl = new GroovyClassLoader(
+    @Parameters
+    static Collection<Object[]> classLoaders() {
+        def normalClassLoader = new GroovyClassLoader()
+        def compileStaticClassLoader = new GroovyClassLoader(
             Thread.currentThread().contextClassLoader,
             withConfig(new CompilerConfiguration()) { ast(groovy.transform.CompileStatic) })
 
+        return [
+            [ normalClassLoader ] as Object[],
+            [ compileStaticClassLoader ] as Object[]
+        ]
+    }
+
+    def cl
+
+    InterceptTest(cl) {
+        this.cl = cl
+    }
+
+    @Test
+    void 'can decorate method on the fly'() {
         Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Intercept
             import com.github.yihtserns.groovy.deco.Function
 
             class Greeter {
 
-                @Intercept({ Function func, args -> String.valueOf(func(args)) + '!' })
+                @Intercept({ Function func, args -> "\${func(args)}!" })
                 String greet(name) {
                     return 'Hey ' + name
                 }
