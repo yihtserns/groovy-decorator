@@ -23,6 +23,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * This annotation is used to describe how to decorate a method:
+ * <pre>
+ *{@code @}MethodDecorator({ &lt;how to decorate method&gt; })
+ *{@code @}GroovyASTTransformationClass("com.github.yihtserns.groovy.decorator.DecoratorASTTransformation")
+ *{@code @}Retention(RetentionPolicy.RUNTIME)
+ *{@code @}Target(ElementType.METHOD)
+ *{@code @} interface AnAnnotation {
+ * }
+ * </pre>
+ * which is then used to annotate a method to decorate it:
+ * <pre>
+ *{@code @}AnAnnotation
+ * &lt;the method&gt;(...)
+ * </pre>
  * @see #value()
  * @author yihtserns
  */
@@ -43,7 +57,22 @@ public @interface MethodDecorator {
     *   }
     * }
     * </pre>
+    * To reference the decorator annotation, add a second parameter to the closure:
+    * <pre>
+    *  // Representing the decorated method, and the annotation annotated on the method
+    * { com.github.yihtserns.groovy.decorator.Function func, AnAnnotation theAnnotation -&gt;
+    *
+    *   // Do whatever you want with theAnnotation
+    *
+    *   return { args -&gt; // A list of arguments the caller used to call the method
+    *
+    *     // return func(args) // Call the decorated method and return the result
+    *     // Or do whatever
+    *   }
+    * }
+    * </pre>
     * @return a closure that decorates a method,
+    * @see MethodDecorator
     */
     Class<? extends Closure> value();
 }
