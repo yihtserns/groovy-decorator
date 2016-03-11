@@ -30,17 +30,21 @@ import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstantExpression;
 import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.FieldExpression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import org.codehaus.groovy.ast.expr.VariableExpression;
 import static org.codehaus.groovy.ast.expr.VariableExpression.THIS_EXPRESSION;
-import org.codehaus.groovy.ast.stmt.BlockStatement;
-import org.codehaus.groovy.ast.stmt.ExpressionStatement;
 import org.codehaus.groovy.ast.stmt.Statement;
+import org.codehaus.groovy.ast.tools.GeneralUtils;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.fieldX;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SimpleMessage;
@@ -155,8 +159,8 @@ public class DecoratorASTTransformation implements ASTTransformation {
 
         ClassExpression decoratorClass = (ClassExpression) methodDecorators.get(0).getMember("value");
 
-        MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", argsX(classX(annotation.getClassNode())));
-        ConstructorCallExpression newDecorator = ctorX(decoratorClass.getType(), argsX(THIS_EXPRESSION, THIS_EXPRESSION));
+        MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", args(classX(annotation.getClassNode())));
+        ConstructorCallExpression newDecorator = ctorX(decoratorClass.getType(), args(THIS_EXPRESSION, THIS_EXPRESSION));
 
         StringBuilder decoratingFieldNameBuilder = new StringBuilder("decorating$");
         decoratingFieldNameBuilder.append(method.getName().replaceAll("\\W", "\\$"));
@@ -189,20 +193,20 @@ public class DecoratorASTTransformation implements ASTTransformation {
             // Create closure that calls the new method
             ClosureExpression callDecoratedMethod = closureX(
                     method.getParameters(),
-                    stmtS(callX(THIS_EXPRESSION, decoratedMethod.getName(), toArgs(method.getParameters()))),
+                    stmt(callX(THIS_EXPRESSION, decoratedMethod.getName(), toArgs(method.getParameters()))),
                     new VariableScope());
-            MethodCallExpression createFunction = callX(classX(Function.class), "create", argsX(
+            MethodCallExpression createFunction = callX(classX(Function.class), "create", args(
                     callDecoratedMethod,
                     constX(method.getName()),
                     classX(method.getReturnType())));
-            createFunction = callX(createFunction, "decorateWith", argsX(
+            createFunction = callX(createFunction, "decorateWith", args(
                     getDecoratingAnnotation,
                     newDecorator));
             funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), createFunction);
             funcField.setNodeMetaData(METHOD_NODE_METADATA_KEY, method);
         } else {
             Expression funcValue = funcField.getInitialValueExpression();
-            funcValue = callX(funcValue, "decorateWith", argsX(
+            funcValue = callX(funcValue, "decorateWith", args(
                     getDecoratingAnnotation,
                     newDecorator));
 
@@ -210,17 +214,8 @@ public class DecoratorASTTransformation implements ASTTransformation {
         }
 
         // Replace original method's body with one that calls the closure
-        MethodCallExpression callFunction = callX(fieldX(funcField), "call", argsX(toVarList(method.getParameters())));
-        method.setCode(stmtS(callFunction));
-    }
-
-    private static Statement stmtS(Expression... expressions) {
-        BlockStatement statement = new BlockStatement();
-        for (Expression expression : expressions) {
-            statement.addStatement(new ExpressionStatement(expression));
-        }
-
-        return statement;
+        MethodCallExpression callFunction = callX(fieldX(funcField), "call", args(toVarList(method.getParameters())));
+        method.setCode(stmt(callFunction));
     }
 
     private static ListExpression toVarList(Parameter[] parameters) {
@@ -242,48 +237,16 @@ public class DecoratorASTTransformation implements ASTTransformation {
     }
 
     private static ClosureExpression closureX(Parameter[] parameters, Statement body, VariableScope varScope) {
-        ClosureExpression expression = new ClosureExpression(parameters, body);
+        ClosureExpression expression = GeneralUtils.closureX(parameters, body);
         expression.setVariableScope(varScope);
 
         return expression;
     }
 
-    private static ConstantExpression constX(Object value) {
-        return new ConstantExpression(value);
-    }
-
-    private static ArgumentListExpression argsX(Expression... expressions) {
-        return new ArgumentListExpression(expressions);
-    }
-
-    private static ClassExpression classX(Class type) {
-        return new ClassExpression(make(type));
-    }
-
-    private static ClassExpression classX(ClassNode type) {
-        return new ClassExpression(type);
-    }
-
-    private static MethodCallExpression callX(Expression type, String methodName, ArgumentListExpression args) {
-        return new MethodCallExpression(type, methodName, args);
-    }
-
-    private static ConstructorCallExpression ctorX(ClassNode type, Expression args) {
-        return new ConstructorCallExpression(type, args);
-    }
-
-    private static VariableExpression varX(String variableName) {
-        return new VariableExpression(variableName);
-    }
-
     private static Expression methodX(MethodNode method) {
-        return new MethodCallExpression(classX(method.getDeclaringClass()), "getDeclaredMethod", argsX(
+        return new MethodCallExpression(classX(method.getDeclaringClass()), "getDeclaredMethod", args(
                 constX(method.getName()),
                 toTypes(CLASS_Type, method.getParameters())));
-    }
-
-    private static FieldExpression fieldX(FieldNode field) {
-        return new FieldExpression(field);
     }
 
     private static ArgumentListExpression toArgs(Parameter[] parameters) {
