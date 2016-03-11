@@ -185,14 +185,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
             funcField = clazz.getField(decoratingFieldName);
         }
 
-        if (funcField != null) {
-            Expression funcValue = funcField.getInitialValueExpression();
-            funcValue = callX(funcValue, "decorateWith", argsX(
-                    getDecoratingAnnotation,
-                    newDecorator));
-
-            funcField.setInitialValueExpression(funcValue);
-        } else {
+        if (funcField == null) {
             // Create closure that calls the new method
             ClosureExpression callDecoratedMethod = closureX(
                     method.getParameters(),
@@ -207,6 +200,13 @@ public class DecoratorASTTransformation implements ASTTransformation {
                     newDecorator));
             funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), createFunction);
             funcField.setNodeMetaData(METHOD_NODE_METADATA_KEY, method);
+        } else {
+            Expression funcValue = funcField.getInitialValueExpression();
+            funcValue = callX(funcValue, "decorateWith", argsX(
+                    getDecoratingAnnotation,
+                    newDecorator));
+
+            funcField.setInitialValueExpression(funcValue);
         }
 
         // Replace original method's body with one that calls the closure
