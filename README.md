@@ -11,13 +11,14 @@ Example
 ```groovy
 // Guard.groovy in its own project
 import com.github.yihtserns.groovy.deco.MethodDecorator
+import com.github.yihtserns.groovy.deco.Function
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
 
-@MethodDecorator({ func ->
+@MethodDecorator({ Function func ->
     return { args ->
         String username = args[0]
 
@@ -54,13 +55,14 @@ op.doStuff('hacker', 1) // throws UnsupportedOperationException
 ```groovy
 // Guard.groovy in its own project
 import com.github.yihtserns.groovy.deco.MethodDecorator
+import com.github.yihtserns.groovy.deco.Function
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
 
-@MethodDecorator({ func, Guard guard ->
+@MethodDecorator({ Function func, Guard guard ->
     String[] prohibited = guard.against()
 
     return { args ->
@@ -112,10 +114,11 @@ op.doSuperSensitiveStuff('hacker', 1) // throws UnsupportedOperationException
 ```groovy
 // SomeScript.groovy
 import com.github.yihtserns.groovy.deco.Intercept
+import com.github.yihtserns.groovy.deco.Function
 
 class SomeOperation {
 
-    @Intercept({ func, args ->
+    @Intercept({ Function func, args ->
         String username = args[0]
 
         if (username == 'hacker') {
