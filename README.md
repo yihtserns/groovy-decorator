@@ -137,6 +137,84 @@ op.doStuff('good guy', 3) // prints 'good guy: 3'
 op.doStuff('hacker', 1) // throws UnsupportedOperationException
 ```
 
+API
+---
+&nbsp; | Description
+------ | -----------
+`Function.name` : `String` | Name of the decorated method.
+`Function.returnType` : `Class<?>` | Return type of the decorated method.
+
+The way it works is similar to `groovy.transform.Memoized`, in that it turns:
+```groovy
+class MyClass {
+
+    @Decorator1(el1 = val1, el2 = val2,... elN = valN)
+    @Decorator2
+    boolean method(String x, int y) {
+        ...
+    }
+
+    @Decorator1
+    String method(x.Input input1, y.Input input2) {
+        ...
+    }
+
+    @Decorator1
+    String method(y.Input input1, x.Input input2) {
+        ...
+    }
+}
+```
+into:
+```groovy
+class MyClass {
+
+    private Function decorating$methodStringint = Function.create({ String x, int y -> decorated$method(x, y) }, boolean)
+                                                          .decorateWith(
+                                                              /** Decorator1 annotated on method(String, int) **/,
+                                                              /** Decorator1's decorator closure **/)
+                                                          .decorateWith(
+                                                              /** Decorator2 annotated on method(String, int) **/,
+                                                              /** Decorator2's decorator closure **/)
+    private Function decorating$methodInputInput = Function.create({ x.Input input1, y.Input input2 -> decorated$method(input1, input2) }, String)
+                                                           .decorateWith(
+                                                               /** Decorator1 annotated on method(x.Input, y.Input) **/,
+                                                               /** Decorator1's decorator closure **/)
+    private Function _decorating$methodInputInput = Function.create({ y.Input input1, x.Input input2 -> decorated$method(input1, input2) }, String)
+                                                            .decorateWith(
+                                                                /** Decorator1 annotated on method(y.Input, x.Input) **/,
+                                                                /** Decorator1's decorator closure **/)
+
+    @Decorator1(el1 = val1, el2 = val2,... elN = valN)
+    @Decorator2
+    boolean method(String x, int y) {
+        decorating$methodStringint([x, y])
+    }
+
+    private boolean decorated$method(String x, int y) {
+        ...
+    }
+
+    @Decorator1
+    String method(x.Input input1, y.Input input2) {
+        decorating$methodInputInput([input1, input2])
+    }
+
+    private String decorated$method(x.Input input1, y.Input input2) {
+        ...
+    }
+
+    @Decorator1
+    String method(y.Input input1, x.Input input2) {
+        _decorating$methodInputInput([input1, input2])
+    }
+
+    private String decorated$method(y.Input input1, x.Input input2) {
+        ...
+    }
+}
+```
+
 Limitations
 -----------
 ### Cannot work with @CompileStatic for Groovy version < 2.3.9
