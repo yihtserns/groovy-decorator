@@ -29,7 +29,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
         throw new IllegalStateException("'count' property must be an Integer")
     }
 
-    return { args -> '[' + (++count) + '] ' + func(args) }
+    return { args -> "[${++count}] ${func(args)}" }
 })
 @GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
 @interface PrependCounter {
