@@ -59,7 +59,7 @@ class DecoratorASTTransformationTest {
     }
 
     @Theory
-    public void 'can decorate method with one param'(toInstance) {
+    void 'can decorate method with one param'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -94,7 +94,7 @@ class DecoratorASTTransformationTest {
     }
 
     @Theory
-    public void 'can use three decorators'(toInstance) {
+    void 'can use three decorators'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -112,7 +112,7 @@ class DecoratorASTTransformationTest {
     }
 
     @Theory
-    public void 'can get func metadata'(toInstance) {
+    void 'can get func metadata'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -137,7 +137,7 @@ class DecoratorASTTransformationTest {
     }
 
     @Theory
-    public void 'should throw when decorating annotation not annotated with @MethodDecorator'(toInstance) {
+    void 'should throw when decorating annotation not annotated with @MethodDecorator'(toInstance) {
         try {
             toInstance("""package com.github.yihtserns.groovy.deco
 
@@ -157,7 +157,7 @@ class DecoratorASTTransformationTest {
     }
 
     @Theory
-    public void 'stack trace should show original location of code'(toInstance) {
+    void 'stack trace should show original location of code'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -186,7 +186,7 @@ class DecoratorASTTransformationTest {
      * Just to add to the possible scenarios that may need to be supported.
      */
     @Theory
-    public void 'can mimic groovy.transform.Memoized'(toInstance) {
+    void 'can mimic groovy.transform.Memoized'(toInstance) {
         def greeter = toInstance("""import com.github.yihtserns.groovy.deco.Exclaim
             import com.github.yihtserns.groovy.deco.Memoized
 
@@ -211,7 +211,7 @@ class DecoratorASTTransformationTest {
     }
 
     @Theory
-    public void 'can reference elements in decorator annotation'(toInstance) {
+    void 'can reference elements in decorator annotation'(toInstance) {
         withoutMaxCacheSize: {
             def greeter = toInstance("""import com.github.yihtserns.groovy.deco.Exclaim
             import com.github.yihtserns.groovy.deco.Memoized
@@ -278,7 +278,7 @@ class DecoratorASTTransformationTest {
     }
 
     @Theory
-    public void 'can work with private method'(toInstance) {
+    void 'can work with private method'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -294,7 +294,7 @@ class DecoratorASTTransformationTest {
     }
 
     @Theory
-    public void 'can work with untyped parameter'(toInstance) {
+    void 'can work with untyped parameter'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -310,7 +310,7 @@ class DecoratorASTTransformationTest {
     }
 
     @Theory
-    public void 'can handle array-type parameter'(toInstance) {
+    void 'can handle array-type parameter'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -333,7 +333,7 @@ class DecoratorASTTransformationTest {
     }
 
     @Theory
-    public void 'can handle multiple methods with parameter with same class name'(toInstance) {
+    void 'can handle multiple methods with parameter with same class name'(toInstance) {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
