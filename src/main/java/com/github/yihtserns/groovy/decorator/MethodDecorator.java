@@ -29,5 +29,19 @@ import java.lang.annotation.Target;
 @Target(ElementType.ANNOTATION_TYPE)
 public @interface MethodDecorator {
 
+   /**
+    * Returns a closure in this form:
+    * <pre>
+    * { com.github.yihtserns.groovy.decorator.Function func -&gt; // Representing the decorated method
+    *
+    *   return { args -&gt; // A list of arguments the caller used to call the method
+    *
+    *     // return func(args) // Call the decorated method and return the result
+    *     // Or do whatever
+    *   }
+    * }
+    * </pre>
+    * @return a closure that decorates a method,
+    */
     Class<? extends Closure> value();
 }
