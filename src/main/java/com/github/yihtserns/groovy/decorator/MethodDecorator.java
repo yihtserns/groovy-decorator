@@ -16,6 +16,7 @@
 package com.github.yihtserns.groovy.decorator;
 
 import groovy.lang.Closure;
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -25,6 +26,7 @@ import java.lang.annotation.Target;
  * @see #value()
  * @author yihtserns
  */
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
 public @interface MethodDecorator {
