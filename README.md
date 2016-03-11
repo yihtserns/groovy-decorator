@@ -4,7 +4,12 @@ Python-inspired method decorator for Groovy.
 
 [![Groovy 2.4.6](https://img.shields.io/badge/groovy-2.4.6-blue.svg)](http://www.groovy-lang.org/) [![Java 1.7.0_75](https://img.shields.io/badge/java-1.7.0__75-red.svg)](https://java.com)
 
-[![Build Status](https://travis-ci.org/yihtserns/groovy-decorator.svg?branch=master)](https://travis-ci.org/yihtserns/groovy-decorator)
+Usage instruction
+-----------------
+Dependency manager | &nbsp;
+------------------ | ------
+Maven | <code>&lt;dependency&gt;<br/>&nbsp;&nbsp;&lt;groupId&gt;com.github.yihtserns&lt;/groupId&gt;<br/>&nbsp;&nbsp;&lt;artifactId&gt;groovy-decorator&lt;/artifactId&gt;<br>&nbsp;&nbsp;&lt;version&gt;0.0.4&lt;/version&gt;<br/>&lt;dependency&gt;</code>
+Groovy Grape | `@Grab('com.github.yihtserns:groovy-decorator:0.0.4')`
 
 Example
 -------
