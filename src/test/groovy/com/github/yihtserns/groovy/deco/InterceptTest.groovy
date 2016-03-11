@@ -62,4 +62,25 @@ class InterceptTest {
         def greeter = clazz.newInstance()
         assert greeter.greet('Noel') == 'Hey Noel!'
     }
+
+    @Test
+    void "can access class' field"() {
+        def cl = new GroovyClassLoader()
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Intercept
+            class Greeter {
+                def count = 0
+
+                @Intercept({ func, args -> count++ })
+                void doNothing() {
+                }
+            }""")
+
+        def greeter = clazz.newInstance()
+
+        greeter.doNothing()
+        assert greeter.count == 1
+        
+        greeter.doNothing()
+        assert greeter.count == 2
+    }
 }
