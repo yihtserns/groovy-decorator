@@ -16,6 +16,7 @@
 
 package com.github.yihtserns.groovy.decorator
 
+import java.lang.annotation.Documented
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
@@ -34,6 +35,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
     }
 })
 @GroovyASTTransformationClass("com.github.yihtserns.groovy.decorator.DecoratorASTTransformation")
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @interface Intercept {
