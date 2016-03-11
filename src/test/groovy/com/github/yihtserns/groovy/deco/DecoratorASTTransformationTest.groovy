@@ -17,10 +17,9 @@
 package com.github.yihtserns.groovy.deco
 
 import org.junit.Test
-import org.junit.experimental.theories.DataPoint
-import org.junit.experimental.theories.Theories
-import org.junit.experimental.theories.Theory
 import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
 
 import org.codehaus.groovy.control.CompilerConfiguration
 
@@ -30,20 +29,31 @@ import static org.junit.Assert.fail
 /**
  * @author yihtserns
  */
-@RunWith(Theories)
+@RunWith(Parameterized)
 class DecoratorASTTransformationTest {
 
-    @DataPoint
-    public static def normalInstantiator = toInstantiator(new GroovyClassLoader())
+    @Parameters
+    static Collection<Object[]> instantiators() {
+        def normalInstantiator = toInstantiator(new GroovyClassLoader())
+        def compileStaticInstantiator = toInstantiator(
+            new GroovyClassLoader(
+                Thread.currentThread().contextClassLoader,
+                withConfig(new CompilerConfiguration()) { ast(groovy.transform.CompileStatic) }))
 
-    @DataPoint
-    public static def compileStaticInstantiator = toInstantiator(
-        new GroovyClassLoader(
-            Thread.currentThread().contextClassLoader,
-            withConfig(new CompilerConfiguration()) { ast(groovy.transform.CompileStatic) }))
+        return [
+            [ normalInstantiator ] as Object[],
+            [ compileStaticInstantiator ] as Object[]
+        ]
+    }
+    
+    def toInstance
 
-    @Theory
-    void 'can decorate'(toInstance) {
+    DecoratorASTTransformationTest(toInstance) {
+        this.toInstance = toInstance
+    }
+
+    @Test
+    void 'can decorate'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -58,8 +68,8 @@ class DecoratorASTTransformationTest {
         assert instance.greet() == 'Hi!'
     }
 
-    @Theory
-    void 'can decorate method with one param'(toInstance) {
+    @Test
+    void 'can decorate method with one param'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -74,8 +84,8 @@ class DecoratorASTTransformationTest {
         assert instance.greet('Noel') == 'Hi Noel!'
     }
 
-    @Theory
-    public void 'can decorate method with three params'(toInstance) {
+    @Test
+    public void 'can decorate method with three params'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -93,8 +103,8 @@ class DecoratorASTTransformationTest {
         assert instance.greet('Noel', 3) == 'Hi Noel Hi Noel Hi Noel!'
     }
 
-    @Theory
-    void 'can use three decorators'(toInstance) {
+    @Test
+    void 'can use three decorators'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -111,8 +121,8 @@ class DecoratorASTTransformationTest {
         assert instance.greet('Noel') == 'Hi Mr. Noel!?'
     }
 
-    @Theory
-    void 'can get func metadata'(toInstance) {
+    @Test
+    void 'can get func metadata'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -136,8 +146,8 @@ class DecoratorASTTransformationTest {
         assert instance.bidding() == 'bidding'.length()
     }
 
-    @Theory
-    void 'should throw when decorating annotation not annotated with @MethodDecorator'(toInstance) {
+    @Test
+    void 'should throw when decorating annotation not annotated with @MethodDecorator'() {
         try {
             toInstance("""package com.github.yihtserns.groovy.deco
 
@@ -156,8 +166,8 @@ class DecoratorASTTransformationTest {
         }
     }
 
-    @Theory
-    void 'stack trace should show original location of code'(toInstance) {
+    @Test
+    void 'stack trace should show original location of code'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -185,8 +195,8 @@ class DecoratorASTTransformationTest {
     /**
      * Just to add to the possible scenarios that may need to be supported.
      */
-    @Theory
-    void 'can mimic groovy.transform.Memoized'(toInstance) {
+    @Test
+    void 'can mimic groovy.transform.Memoized'() {
         def greeter = toInstance("""import com.github.yihtserns.groovy.deco.Exclaim
             import com.github.yihtserns.groovy.deco.Memoized
 
@@ -210,8 +220,8 @@ class DecoratorASTTransformationTest {
         }
     }
 
-    @Theory
-    void 'can reference elements in decorator annotation'(toInstance) {
+    @Test
+    void 'can reference elements in decorator annotation'() {
         withoutMaxCacheSize: {
             def greeter = toInstance("""import com.github.yihtserns.groovy.deco.Exclaim
             import com.github.yihtserns.groovy.deco.Memoized
@@ -277,8 +287,8 @@ class DecoratorASTTransformationTest {
         }
     }
 
-    @Theory
-    void 'can work with private method'(toInstance) {
+    @Test
+    void 'can work with private method'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -293,8 +303,8 @@ class DecoratorASTTransformationTest {
         assert instance.greet() == 'Hi!'
     }
 
-    @Theory
-    void 'can work with untyped parameter'(toInstance) {
+    @Test
+    void 'can work with untyped parameter'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -309,8 +319,8 @@ class DecoratorASTTransformationTest {
         assert instance.greet('Noel') == 'Hi Noel!'
     }
 
-    @Theory
-    void 'can handle array-type parameter'(toInstance) {
+    @Test
+    void 'can handle array-type parameter'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -332,8 +342,8 @@ class DecoratorASTTransformationTest {
         assert instance.greet([['Noel', 'Patrick'], ['Stella']] as String[][]) == 'Hi Noel, Patrick. Hi Stella.?'
     }
 
-    @Theory
-    void 'can handle multiple methods with parameter with same class name'(toInstance) {
+    @Test
+    void 'can handle multiple methods with parameter with same class name'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
@@ -359,8 +369,8 @@ class DecoratorASTTransformationTest {
         assert instance.run(new z.Input()) == 'z.Input.'
     }
 
-    @Theory
-    public void "decorator can access class' field"(toInstance) {
+    @Test
+    public void "decorator can access class' field"() {
         try {
             toInstance("""package com.github.yihtserns.groovy.deco
 
@@ -380,8 +390,8 @@ class DecoratorASTTransformationTest {
         }
     }
 
-    @Theory
-    void "decorating function can access class' field"(toInstance) {
+    @Test
+    void "decorating function can access class' field"() {
         def instance = toInstance("""package com.github.yihtserns.groovy.deco
 
             class Greeter {
