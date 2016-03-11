@@ -110,7 +110,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
      *
      *  {@code @}Decorator1
      *   String method(x.Input input1, y.Input input2) {
-     *     decorating$methodInputInput(input1, input2)
+     *     decorating$methodInputInput([input1, input2])
      *   }
      *
      *   private String decorated$method(x.Input input1, y.Input input2) {
@@ -119,7 +119,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
      *
      *  {@code @}Decorator1
      *   String method(y.Input input1, x.Input input2) {
-     *     _decorating$methodInputInput(input1, input2)
+     *     _decorating$methodInputInput([input1, input2])
      *   }
      *
      *   private String decorated$method(y.Input input1, x.Input input2) {
