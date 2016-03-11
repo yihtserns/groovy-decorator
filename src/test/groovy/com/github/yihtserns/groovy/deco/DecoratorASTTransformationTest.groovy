@@ -359,6 +359,46 @@ class DecoratorASTTransformationTest {
         assert instance.run(new z.Input()) == 'z.Input.'
     }
 
+    @Theory
+    public void "decorator can access class' field"(toInstance) {
+        try {
+            toInstance("""package com.github.yihtserns.groovy.deco
+
+                class Greeter {
+
+                    String count = "0"
+
+                    @PrependCounter
+                    String greet(String name) {
+                        return 'Hi ' + name
+                    }
+                }
+            """)
+            fail("Should throw exception")
+        } catch (IllegalStateException e) {
+            assert e.message == "'count' property must be an Integer"
+        }
+    }
+
+    @Theory
+    void "decorating function can access class' field"(toInstance) {
+        def instance = toInstance("""package com.github.yihtserns.groovy.deco
+
+            class Greeter {
+
+                int count = 0
+
+                @PrependCounter
+                String greet(String name) {
+                    return 'Hi ' + name
+                }
+            }
+        """)
+
+        assert instance.greet('Noel') == '[1] Hi Noel'
+        assert instance.greet('Patrick') == '[2] Hi Patrick'
+    }
+
     private static Closure toInstantiator(GroovyClassLoader cl) {
         return { classScript ->
             def clazz = cl.parseClass(classScript)
