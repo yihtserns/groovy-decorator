@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.yihtserns.groovy.deco
+package com.github.yihtserns.groovy.decorator
 
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.junit.Test
@@ -51,8 +51,8 @@ class InterceptTest {
 
     @Test
     void 'can decorate method on the fly'() {
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Intercept
-            import com.github.yihtserns.groovy.deco.Function
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
+            import com.github.yihtserns.groovy.decorator.Function
 
             class Greeter {
 
@@ -69,7 +69,7 @@ class InterceptTest {
     @Test
     void "can access class' field"() {
         def cl = new GroovyClassLoader()
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.deco.Intercept
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
             class Greeter {
                 def count = 0
 

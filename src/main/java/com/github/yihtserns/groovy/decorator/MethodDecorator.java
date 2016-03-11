@@ -13,24 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.github.yihtserns.groovy.decorator;
 
-package com.github.yihtserns.groovy.deco
-
-import java.lang.annotation.Target
-import java.lang.annotation.ElementType
-import org.codehaus.groovy.transform.GroovyASTTransformationClass
+import groovy.lang.Closure;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- *
+ * @see #value()
  * @author yihtserns
  */
-@MethodDecorator({ func ->
-    if (count.class != Integer) {
-        throw new IllegalStateException("'count' property must be an Integer")
-    }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.ANNOTATION_TYPE)
+public @interface MethodDecorator {
 
-    return { args -> "[${++count}] ${func(args)}" }
-})
-@GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
-@interface PrependCounter {
+    Class<? extends Closure> value();
 }

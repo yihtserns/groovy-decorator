@@ -10,8 +10,8 @@ Example
 -------
 ```groovy
 // Guard.groovy in its own project
-import com.github.yihtserns.groovy.deco.MethodDecorator
-import com.github.yihtserns.groovy.deco.Function
+import com.github.yihtserns.groovy.decorator.MethodDecorator
+import com.github.yihtserns.groovy.decorator.Function
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
@@ -29,7 +29,7 @@ import java.lang.annotation.ElementType
         }
     }
 })
-@GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
+@GroovyASTTransformationClass("com.github.yihtserns.groovy.decorator.DecoratorASTTransformation")
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @interface Guard {
@@ -54,8 +54,8 @@ op.doStuff('hacker', 1) // throws UnsupportedOperationException
 ### Using annotation elements
 ```groovy
 // Guard.groovy in its own project
-import com.github.yihtserns.groovy.deco.MethodDecorator
-import com.github.yihtserns.groovy.deco.Function
+import com.github.yihtserns.groovy.decorator.MethodDecorator
+import com.github.yihtserns.groovy.decorator.Function
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
@@ -75,7 +75,7 @@ import java.lang.annotation.ElementType
         }
     }
 })
-@GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
+@GroovyASTTransformationClass("com.github.yihtserns.groovy.decorator.DecoratorASTTransformation")
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @interface Guard {
@@ -113,8 +113,8 @@ op.doSuperSensitiveStuff('hacker', 1) // throws UnsupportedOperationException
 ### Ad-hoc method decoration
 ```groovy
 // SomeScript.groovy
-import com.github.yihtserns.groovy.deco.Intercept
-import com.github.yihtserns.groovy.deco.Function
+import com.github.yihtserns.groovy.decorator.Intercept
+import com.github.yihtserns.groovy.decorator.Function
 
 class SomeOperation {
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.yihtserns.groovy.deco
+package com.github.yihtserns.groovy.decorator
 
 import org.junit.Test
 

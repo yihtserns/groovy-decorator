@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.yihtserns.groovy.deco
+package com.github.yihtserns.groovy.decorator
 
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
@@ -24,7 +24,6 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
  *
  * @author yihtserns
  */
-@MethodDecorator({ func -> { args -> func(args) + '?' } })
-@GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
-@interface Question {
+@GroovyASTTransformationClass("com.github.yihtserns.groovy.decorator.DecoratorASTTransformation")
+@interface WithoutMethodDecorator {
 }

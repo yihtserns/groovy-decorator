@@ -14,28 +14,29 @@
  * limitations under the License.
  */
 
-package com.github.yihtserns.groovy.deco
+package com.github.yihtserns.groovy.decorator
 
+import java.lang.annotation.Retention
+import java.lang.annotation.RetentionPolicy
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 /**
- *
+ * @see #value()
  * @author yihtserns
  */
-@MethodDecorator({ func ->
+@MethodDecorator({ func, Intercept intercept ->
+    def handle = intercept.value().newInstance(this, this)
+
     return { args ->
-        switch (func.returnType) {
-            case String:
-                return "$func.name: $func.returnType.simpleName"
-            case int:
-                return func.name.length()
-            default:
-                throw new UnsupportedOperationException("Unsupported type: " + func.returnType)
-        }
+        handle(func, args)
     }
 })
-@GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
-@interface ReturnMetadata {
+@GroovyASTTransformationClass("com.github.yihtserns.groovy.decorator.DecoratorASTTransformation")
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+@interface Intercept {
+
+    Class<? extends Closure> value()
 }

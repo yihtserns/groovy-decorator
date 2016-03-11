@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.yihtserns.groovy.deco;
+package com.github.yihtserns.groovy.decorator;
 
 import groovy.lang.Closure;
 import java.util.List;

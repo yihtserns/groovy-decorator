@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.yihtserns.groovy.deco
+package com.github.yihtserns.groovy.decorator
 
 import java.lang.annotation.Target
 import java.lang.annotation.ElementType
@@ -24,6 +24,18 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
  *
  * @author yihtserns
  */
-@GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
-@interface WithoutMethodDecorator {
+@MethodDecorator({ func ->
+    return { args ->
+        switch (func.returnType) {
+            case String:
+                return "$func.name: $func.returnType.simpleName"
+            case int:
+                return func.name.length()
+            default:
+                throw new UnsupportedOperationException("Unsupported type: " + func.returnType)
+        }
+    }
+})
+@GroovyASTTransformationClass("com.github.yihtserns.groovy.decorator.DecoratorASTTransformation")
+@interface ReturnMetadata {
 }

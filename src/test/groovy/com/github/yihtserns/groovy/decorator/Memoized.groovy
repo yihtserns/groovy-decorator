@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.github.yihtserns.groovy.deco
+package com.github.yihtserns.groovy.decorator
 
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
@@ -36,7 +36,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
         return func.memoizeAtMost(maxCacheSize)
     }
 })
-@GroovyASTTransformationClass("com.github.yihtserns.groovy.deco.DecoratorASTTransformation")
+@GroovyASTTransformationClass("com.github.yihtserns.groovy.decorator.DecoratorASTTransformation")
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 @interface Memoized {
