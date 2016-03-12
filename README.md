@@ -4,6 +4,8 @@ Python-inspired method decorator for Groovy.
 
 [![Groovy 2.4.6](https://img.shields.io/badge/groovy-2.4.6-blue.svg)](http://www.groovy-lang.org/) [![Java 1.7.0_75](https://img.shields.io/badge/java-1.7.0__75-red.svg)](https://java.com)
 
+[![Build Status](https://travis-ci.org/yihtserns/groovy-decorator.svg?branch=master)](https://travis-ci.org/yihtserns/groovy-decorator)
+
 How to get
 -----------------
 ### Maven
