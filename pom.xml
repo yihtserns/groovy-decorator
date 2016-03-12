@@ -8,7 +8,7 @@
     </parent>
     <groupId>com.github.yihtserns</groupId>
     <artifactId>groovy-decorator</artifactId>
-    <version>0.0.4-SNAPSHOT</version>
+    <version>0.0.4</version>
     <packaging>jar</packaging>
 
     <name>Groovy Decorator</name>
