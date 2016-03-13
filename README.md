@@ -153,6 +153,53 @@ op.doStuff('good guy', 3) // prints 'good guy: 3'
 op.doStuff('hacker', 1) // throws UnsupportedOperationException
 ```
 
+### Sharing ad-hoc method decoration
+```groovy
+// SomeScript.groovy
+import com.github.yihtserns.groovy.decorator.Intercept
+import com.github.yihtserns.groovy.decorator.Function
+
+class SomeOperation {
+
+    @Intercept(BlockHacker)
+    public String doStuff(String username, int secretCode) {
+        println "${username}: ${secretCode}"
+    }
+
+    @Intercept(BlockHacker)
+    public String doAnotherStuff(String username, int secretCode) {
+        println "${username}: ${secretCode}"
+    }
+
+    private static class BlockHacker extends Closure {
+
+        BlockHacker(owner, thisObject) {
+            super(owner, thisObject)
+        }
+
+        def doCall(Function func, args) {
+            String username = args[0]
+
+            if (username == 'hacker') {
+                throw new UnsupportedOperationException("hacker not allowed")
+            } else {
+                func(args) // Call original method
+            }
+        }
+    }
+}
+
+def op = new SomeOperation()
+
+op.doStuff('admin', 10) // prints 'admin: 10'
+op.doStuff('good guy', 3) // prints 'good guy: 3'
+op.doStuff('hacker', 1) // throws UnsupportedOperationException
+
+op.doAnotherStuff('admin', 10) // prints 'admin: 10'
+op.doAnotherStuff('good guy', 3) // prints 'good guy: 3'
+op.doAnotherStuff('hacker', 1) // throws UnsupportedOperationException
+```
+
 API
 ---
 &nbsp; | Description

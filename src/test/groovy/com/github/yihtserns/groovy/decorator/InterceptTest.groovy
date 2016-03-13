@@ -85,4 +85,38 @@ class InterceptTest {
         greeter.doNothing()
         assert greeter.count == 2
     }
+
+    @Test
+    public void 'can share method decoration'() {
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
+            import com.github.yihtserns.groovy.decorator.Function
+
+            class Greeter {
+
+                @Intercept(PrependNonsense)
+                String greet(name) {
+                    return 'Hey ' + name
+                }
+
+                @Intercept(PrependNonsense)
+                String greet() {
+                    return 'Hi'
+                }
+
+                private static class PrependNonsense extends Closure {
+                    PrependNonsense(owner, thisObject) {
+                        super(owner, thisObject)
+                    }
+
+                    String doCall(Function func, args) {
+                        "Nonsense: \${func(args)}"
+                    }
+                }
+            }""")
+
+        def greeter = clazz.newInstance()
+
+        assert greeter.greet('Noel') == 'Nonsense: Hey Noel'
+        assert greeter.greet() == 'Nonsense: Hi'
+    }
 }
