@@ -68,10 +68,9 @@ class InterceptTest {
 
     @Test
     void "can access class' field"() {
-        def cl = new GroovyClassLoader()
         Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
             class Greeter {
-                def count = 0
+                int count = 0
 
                 @Intercept({ func, args -> count++ })
                 void doNothing() {
