@@ -149,10 +149,9 @@ public class DecoratorASTTransformation implements ASTTransformation {
         ClassNode clazz = method.getDeclaringClass();
 
         String decoratingFieldName = buildDecoratingFieldName(method);
-        FieldNode funcField = clazz.getField(decoratingFieldName);
-        while (funcField != null && !method.equals(funcField.getNodeMetaData(METHOD_NODE_METADATA_KEY))) {
+        FieldNode funcField;
+        while ((funcField = clazz.getField(decoratingFieldName)) != null && !method.equals(funcField.getNodeMetaData(METHOD_NODE_METADATA_KEY))) {
             decoratingFieldName = "_" + decoratingFieldName;
-            funcField = clazz.getField(decoratingFieldName);
         }
 
         if (funcField == null) {
