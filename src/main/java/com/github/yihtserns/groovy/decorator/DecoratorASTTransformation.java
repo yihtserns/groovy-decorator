@@ -30,7 +30,6 @@ import org.codehaus.groovy.ast.expr.ArgumentListExpression;
 import org.codehaus.groovy.ast.expr.ArrayExpression;
 import org.codehaus.groovy.ast.expr.ClassExpression;
 import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.ConstructorCallExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
@@ -157,10 +156,12 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 method.getExceptions(),
                 method.getCode());
 
-        ClassExpression decoratorClass = (ClassExpression) methodDecorators.get(0).getMember("value");
+        Expression decoratorInstance = methodDecorators.get(0).getMember("value");
+        if (decoratorInstance instanceof ClassExpression) {
+            decoratorInstance = ctorX(decoratorInstance.getType(), args(THIS_EXPRESSION, THIS_EXPRESSION));
+        }
 
         MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", args(classX(annotation.getClassNode())));
-        ConstructorCallExpression newDecorator = ctorX(decoratorClass.getType(), args(THIS_EXPRESSION, THIS_EXPRESSION));
 
         StringBuilder decoratingFieldNameBuilder = new StringBuilder("decorating$");
         decoratingFieldNameBuilder.append(method.getName().replaceAll("\\W", "\\$"));
@@ -201,14 +202,14 @@ public class DecoratorASTTransformation implements ASTTransformation {
                     classX(method.getReturnType())));
             createFunction = callX(createFunction, "decorateWith", args(
                     getDecoratingAnnotation,
-                    newDecorator));
+                    decoratorInstance));
             funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), createFunction);
             funcField.setNodeMetaData(METHOD_NODE_METADATA_KEY, method);
         } else {
             Expression funcValue = funcField.getInitialValueExpression();
             funcValue = callX(funcValue, "decorateWith", args(
                     getDecoratingAnnotation,
-                    newDecorator));
+                    decoratorInstance));
 
             funcField.setInitialValueExpression(funcValue);
         }

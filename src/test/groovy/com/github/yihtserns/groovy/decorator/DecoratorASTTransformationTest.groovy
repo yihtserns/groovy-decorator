@@ -409,6 +409,12 @@ class DecoratorASTTransformationTest {
         assert instance.greet('Patrick') == '[2] Hi Patrick'
     }
 
+    @DontRun
+    @Test
+    void 'can use decorator annotation compiled in same session'() {
+        throw new RuntimeException("Should not reach here")
+    }
+
     private static Closure toInstantiator(GroovyClassLoader cl) {
         return { classScript ->
             def clazz = cl.parseClass(classScript)
