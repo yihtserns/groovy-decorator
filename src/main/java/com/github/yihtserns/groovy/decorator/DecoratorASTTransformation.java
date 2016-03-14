@@ -166,8 +166,8 @@ public class DecoratorASTTransformation implements ASTTransformation {
             funcField.setNodeMetaData(METHOD_NODE_METADATA_KEY, method);
 
             // Replace original method's body
-            MethodCallExpression callFunction = callX(fieldX(funcField), "call", args(toVarList(method.getParameters())));
-            method.setCode(stmt(callFunction));
+            MethodCallExpression callFunctionField = callX(fieldX(funcField), "call", args(toVarList(method.getParameters())));
+            method.setCode(stmt(callFunctionField));
         }
 
         MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", args(classX(annotation.getClassNode())));
