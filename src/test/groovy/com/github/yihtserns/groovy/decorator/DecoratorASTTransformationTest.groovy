@@ -198,13 +198,13 @@ class DecoratorASTTransformationTest {
     @Test
     void 'can mimic groovy.transform.Memoized'() {
         def greeter = toInstance("""import com.github.yihtserns.groovy.decorator.Exclaim
-            import com.github.yihtserns.groovy.decorator.Memoized
+            import com.github.yihtserns.groovy.decorator.CacheResult
 
             class Greeter {
                 int count = 1
 
                 @Exclaim
-                @Memoized
+                @CacheResult
                 String greet(String name) {
                     if (count >= 5) {
                         throw new RuntimeException("Cannot call method more than 5 times")
@@ -224,12 +224,12 @@ class DecoratorASTTransformationTest {
     void 'can reference elements in decorator annotation'() {
         withoutMaxCacheSize: {
             def greeter = toInstance("""import com.github.yihtserns.groovy.decorator.Exclaim
-            import com.github.yihtserns.groovy.decorator.Memoized
+            import com.github.yihtserns.groovy.decorator.CacheResult
 
             class Greeter {
                 int called = 0
 
-                @Memoized
+                @CacheResult
                 int greet(int diff) {
                     called++
                     return diff
@@ -256,12 +256,12 @@ class DecoratorASTTransformationTest {
 
         withMaxCacheSize: {
             def greeter = toInstance("""import com.github.yihtserns.groovy.decorator.Exclaim
-                import com.github.yihtserns.groovy.decorator.Memoized
+                import com.github.yihtserns.groovy.decorator.CacheResult
 
                 class Greeter {
                     int called = 0
 
-                    @Memoized(maxCacheSize = 3)
+                    @CacheResult(maxCacheSize = 3)
                     int greet(int diff) {
                         called++
                         return diff

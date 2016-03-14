@@ -27,8 +27,8 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
  *
  * @author yihtserns
  */
-@MethodDecorator({ func, memoized ->
-    def maxCacheSize = memoized.maxCacheSize()
+@MethodDecorator({ func, cacheResult ->
+    def maxCacheSize = cacheResult.maxCacheSize()
 
     if (maxCacheSize == 0) {
         return func.memoize()
@@ -39,7 +39,7 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
 @GroovyASTTransformationClass("com.github.yihtserns.groovy.decorator.DecoratorASTTransformation")
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-@interface Memoized {
+@interface CacheResult {
 
     int maxCacheSize() default 0;
 }
