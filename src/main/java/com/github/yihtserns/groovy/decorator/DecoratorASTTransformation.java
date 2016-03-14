@@ -148,15 +148,6 @@ public class DecoratorASTTransformation implements ASTTransformation {
 
         ClassNode clazz = method.getDeclaringClass();
 
-        // Move original method's body into a new method
-        MethodNode decoratedMethod = clazz.addMethod(
-                "decorated$" + method.getName(),
-                MethodNode.ACC_PRIVATE,
-                method.getReturnType(),
-                method.getParameters(),
-                method.getExceptions(),
-                method.getCode());
-
         String decoratingFieldName = buildDecoratingFieldName(method);
         FieldNode funcField = clazz.getField(decoratingFieldName);
         while (funcField != null && !method.equals(funcField.getNodeMetaData(METHOD_NODE_METADATA_KEY))) {
@@ -165,18 +156,19 @@ public class DecoratorASTTransformation implements ASTTransformation {
         }
 
         if (funcField == null) {
-            // Create closure that calls the new method
-            ClosureExpression callDecoratedMethod = closureX(
-                    method.getParameters(),
-                    stmt(callX(THIS_EXPRESSION, decoratedMethod.getName(), toArgs(method.getParameters()))),
-                    new VariableScope());
+            MethodNode decoratedMethod = copyMethodTo("decorated$" + method.getName(), method);
+
             MethodCallExpression createFunction = callX(classX(Function.class), "create", args(
-                    callDecoratedMethod,
+                    closureThatCalls(decoratedMethod),
                     constX(method.getName()),
                     classX(method.getReturnType())));
 
             funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), createFunction);
             funcField.setNodeMetaData(METHOD_NODE_METADATA_KEY, method);
+
+            // Replace original method's body
+            MethodCallExpression callFunction = callX(fieldX(funcField), "call", args(toVarList(method.getParameters())));
+            method.setCode(stmt(callFunction));
         }
 
         MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", args(classX(annotation.getClassNode())));
@@ -190,10 +182,23 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 getDecoratingAnnotation,
                 decoratorInstance));
         funcField.setInitialValueExpression(decorateExistingFunction);
+    }
 
-        // Replace original method's body with one that calls the closure
-        MethodCallExpression callFunction = callX(fieldX(funcField), "call", args(toVarList(method.getParameters())));
-        method.setCode(stmt(callFunction));
+    private MethodNode copyMethodTo(String newPrivateMethodName, MethodNode method) {
+        return method.getDeclaringClass().addMethod(
+                newPrivateMethodName,
+                MethodNode.ACC_PRIVATE,
+                method.getReturnType(),
+                method.getParameters(),
+                method.getExceptions(),
+                method.getCode());
+    }
+
+    private static ClosureExpression closureThatCalls(MethodNode method) {
+        return closureX(
+                method.getParameters(),
+                stmt(callX(THIS_EXPRESSION, method.getName(), toArgs(method.getParameters()))),
+                new VariableScope());
     }
 
     private static String buildDecoratingFieldName(MethodNode method) {
