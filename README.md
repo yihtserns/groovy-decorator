@@ -5,22 +5,7 @@ Python-inspired method decorator for Groovy.
 [![Groovy 2.4.6](https://img.shields.io/badge/groovy-2.4.6-blue.svg)](http://www.groovy-lang.org/) [![Java 1.7.0_75](https://img.shields.io/badge/java-1.7.0__75-red.svg)](https://java.com)
 
 [![Build Status](https://travis-ci.org/yihtserns/groovy-decorator.svg?branch=master)](https://travis-ci.org/yihtserns/groovy-decorator)
-
-How to get
------------------
-### Maven
-```xml
-<dependency>
-  <groupId>com.github.yihtserns</groupId>
-  <artifactId>groovy-decorator</artifactId>
-  <version>0.0.4</version>
-</dependency>
-```
-
-### Groovy Grape
-```groovy
-@Grab('com.github.yihtserns:groovy-decorator:0.0.4')
-```
+[![Maven Central Releases](https://img.shields.io/badge/maven--central-releases-blue.svg)](http://search.maven.org/#search|ga|1|g:"com.github.yihtserns" AND a:"groovy-decorator")
 
 Example
 -------
