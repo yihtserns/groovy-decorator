@@ -181,19 +181,16 @@ public class DecoratorASTTransformation implements ASTTransformation {
                     callDecoratedMethod,
                     constX(method.getName()),
                     classX(method.getReturnType())));
-            createFunction = callX(createFunction, "decorateWith", args(
-                    getDecoratingAnnotation,
-                    decoratorInstance));
+
             funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), createFunction);
             funcField.setNodeMetaData(METHOD_NODE_METADATA_KEY, method);
-        } else {
-            Expression funcValue = funcField.getInitialValueExpression();
-            funcValue = callX(funcValue, "decorateWith", args(
-                    getDecoratingAnnotation,
-                    decoratorInstance));
-
-            funcField.setInitialValueExpression(funcValue);
         }
+
+        Expression existingFunction = funcField.getInitialValueExpression();
+        Expression decorateExistingFunction = callX(existingFunction, "decorateWith", args(
+                getDecoratingAnnotation,
+                decoratorInstance));
+        funcField.setInitialValueExpression(decorateExistingFunction);
 
         // Replace original method's body with one that calls the closure
         MethodCallExpression callFunction = callX(fieldX(funcField), "call", args(toVarList(method.getParameters())));
