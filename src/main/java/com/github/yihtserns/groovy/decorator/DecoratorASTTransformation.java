@@ -157,13 +157,6 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 method.getExceptions(),
                 method.getCode());
 
-        Expression decoratorInstance = methodDecorators.get(0).getMember("value");
-        if (decoratorInstance instanceof ClassExpression) {
-            decoratorInstance = ctorX(decoratorInstance.getType(), args(THIS_EXPRESSION, THIS_EXPRESSION));
-        }
-
-        MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", args(classX(annotation.getClassNode())));
-
         String decoratingFieldName = buildDecoratingFieldName(method);
         FieldNode funcField = clazz.getField(decoratingFieldName);
         while (funcField != null && !method.equals(funcField.getNodeMetaData(METHOD_NODE_METADATA_KEY))) {
@@ -184,6 +177,12 @@ public class DecoratorASTTransformation implements ASTTransformation {
 
             funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), createFunction);
             funcField.setNodeMetaData(METHOD_NODE_METADATA_KEY, method);
+        }
+
+        MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", args(classX(annotation.getClassNode())));
+        Expression decoratorInstance = methodDecorators.get(0).getMember("value");
+        if (decoratorInstance instanceof ClassExpression) {
+            decoratorInstance = ctorX(decoratorInstance.getType(), args(THIS_EXPRESSION, THIS_EXPRESSION));
         }
 
         Expression existingFunction = funcField.getInitialValueExpression();
