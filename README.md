@@ -278,6 +278,29 @@ class MyClass {
 }
 ```
 
+### Multiple decoration ordering
+```groovy
+@Decorator1 // Decorate with this first, then
+@Decorator2 // Decorate with this, then
+@Decorator3 // Decorate with this
+String getSecret(user, secretId) {
+  ...
+}
+```
+
+Example:
+```groovy
+@Allow(Role.FIELD_AGENT)
+@CacheResult
+@Log(entry=true, exit=true)
+String getSecret(user, secretId) {
+  ...
+}
+
+...
+getSecret('707', 707) // -> Log -> CacheResult -> Allow -> greet(user, secretId)
+```
+
 Limitations
 -----------
 ### Cannot work with @CompileStatic for Groovy version < 2.3.9
