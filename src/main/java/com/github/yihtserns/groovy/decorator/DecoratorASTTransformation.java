@@ -51,8 +51,9 @@ import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 
 /**
- *
  * @author yihtserns
+ * @see #visit(ASTNode[], SourceUnit)
+ * @see MethodDecorator
  */
 @GroovyASTTransformation(phase = CompilePhase.CANONICALIZATION)
 public class DecoratorASTTransformation implements ASTTransformation {
@@ -163,27 +164,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
 
         MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", args(classX(annotation.getClassNode())));
 
-        StringBuilder decoratingFieldNameBuilder = new StringBuilder("decorating$");
-        decoratingFieldNameBuilder.append(method.getName().replaceAll("\\W", "\\$"));
-        for (Parameter parameter : method.getParameters()) {
-            ClassNode type = parameter.getType();
-
-            String typeName;
-            if (type.isArray()) {
-                StringBuilder typeNameBuilder = new StringBuilder();
-                ClassNode currentType = type;
-                while (currentType.isArray()) {
-                    typeNameBuilder.append("Array");
-                    currentType = currentType.getComponentType();
-                }
-                typeName = typeNameBuilder.insert(0, currentType.getNameWithoutPackage()).toString();
-            } else {
-                typeName = type.getNameWithoutPackage();
-            }
-            decoratingFieldNameBuilder.append(typeName);
-        }
-        String decoratingFieldName = decoratingFieldNameBuilder.toString();
-
+        String decoratingFieldName = buildDecoratingFieldName(method);
         FieldNode funcField = clazz.getField(decoratingFieldName);
         while (funcField != null && !method.equals(funcField.getNodeMetaData(METHOD_NODE_METADATA_KEY))) {
             decoratingFieldName = "_" + decoratingFieldName;
@@ -217,6 +198,24 @@ public class DecoratorASTTransformation implements ASTTransformation {
         // Replace original method's body with one that calls the closure
         MethodCallExpression callFunction = callX(fieldX(funcField), "call", args(toVarList(method.getParameters())));
         method.setCode(stmt(callFunction));
+    }
+
+    private static String buildDecoratingFieldName(MethodNode method) {
+        StringBuilder decoratingFieldNameBuilder = new StringBuilder("decorating$" + method.getName().replaceAll("\\W", "\\$"));
+
+        for (Parameter parameter : method.getParameters()) {
+            decoratingFieldNameBuilder.append(buildTypeName(parameter.getType()));
+        }
+
+        return decoratingFieldNameBuilder.toString();
+    }
+
+    private static String buildTypeName(ClassNode type) {
+        if (type.isArray()) {
+            return buildTypeName(type.getComponentType()) + "Array";
+        }
+
+        return type.getNameWithoutPackage();
     }
 
     private static ListExpression toVarList(Parameter[] parameters) {
