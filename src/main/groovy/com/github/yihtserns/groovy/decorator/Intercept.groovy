@@ -67,9 +67,27 @@ import org.codehaus.groovy.transform.GroovyASTTransformationClass
     *   // Or do whatever
     * }
     * </pre>
-    * The closure can also reference any property that the method's class has.
+    * or a similar class:
+    * <pre>
+    * class AClosure extends Closure {
     *
-    * @return a closure that intercepts a method call
+    *   AClosure(owner, thisObject) {
+    *     super(owner, thisObject)
+    *   }
+    *
+    *  /**
+    *   * @param func representing the decorated method
+    *   * @param args list of arguments the caller used to call the method
+    *   *&#47;
+    *   def doCall(com.github.yihtserns.groovy.decorator.Function func, args) {
+    *     // return func(args) // Call the decorated method and return the result
+    *     // Or do whatever
+    *   }
+    * }
+    * </pre>
+    * The closure or class can also reference any property that the method's class has.
+    *
+    * @return a closure or class that intercepts a method call
     */
     Class<? extends Closure> value()
 }
