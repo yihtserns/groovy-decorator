@@ -16,12 +16,9 @@
 
 package com.github.yihtserns.groovy.decorator
 
-import java.lang.annotation.Target
-import java.lang.annotation.ElementType
 import org.codehaus.groovy.transform.GroovyASTTransformationClass
 
 /**
- *
  * @author yihtserns
  */
 @MethodDecorator({ func ->
