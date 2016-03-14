@@ -67,7 +67,7 @@ class InterceptTest {
     }
 
     @Test
-    void "can access class' field"() {
+    void "closure can access class' field"() {
         Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
             class Greeter {
                 int count = 0
@@ -118,5 +118,35 @@ class InterceptTest {
 
         assert greeter.greet('Noel') == 'Nonsense: Hey Noel'
         assert greeter.greet() == 'Nonsense: Hi'
+    }
+
+    @Test
+    void "closure class can access class' field"() {
+        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
+            class Greeter {
+                int count = 0
+
+                @Intercept(ReturnIncrementedCount)
+                void doNothing() {
+                }
+
+                private static class ReturnIncrementedCount extends Closure {
+                    ReturnIncrementedCount(owner, thisObject) {
+                        super(owner, thisObject)
+                    }
+
+                    def doCall(func, args) {
+                        count++
+                    }
+                }
+            }""")
+
+        def greeter = clazz.newInstance()
+
+        greeter.doNothing()
+        assert greeter.count == 1
+
+        greeter.doNothing()
+        assert greeter.count == 2
     }
 }
