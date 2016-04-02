@@ -150,7 +150,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
 
         String decoratingFieldName = buildDecoratingFieldName(method);
         FieldNode funcField;
-        while ((funcField = clazz.getField(decoratingFieldName)) != null && !method.equals(funcField.getNodeMetaData(METHOD_NODE_METADATA_KEY))) {
+        while ((funcField = clazz.getField(decoratingFieldName)) != null && !funcFieldBelongsTo(method, funcField)) {
             decoratingFieldName = "_" + decoratingFieldName;
         }
 
@@ -163,7 +163,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
                     classX(method.getReturnType())));
 
             funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), createFunction);
-            funcField.setNodeMetaData(METHOD_NODE_METADATA_KEY, method);
+            markFuncFieldAsBelongingTo(method, funcField);
 
             // Replace original method's body
             MethodCallExpression callFunctionField = callX(fieldX(funcField), "call", args(toVarList(method.getParameters())));
@@ -181,6 +181,14 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 getDecoratingAnnotation,
                 decoratorInstance));
         funcField.setInitialValueExpression(decorateExistingFunction);
+    }
+
+    private boolean funcFieldBelongsTo(MethodNode method, FieldNode funcField) {
+        return method.equals(funcField.getNodeMetaData(METHOD_NODE_METADATA_KEY));
+    }
+
+    private void markFuncFieldAsBelongingTo(MethodNode method, FieldNode funcField) {
+        funcField.setNodeMetaData(METHOD_NODE_METADATA_KEY, method);
     }
 
     private MethodNode copyMethodTo(String newPrivateMethodName, MethodNode method) {
