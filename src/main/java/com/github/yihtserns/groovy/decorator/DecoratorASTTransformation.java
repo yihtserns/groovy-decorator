@@ -146,24 +146,15 @@ public class DecoratorASTTransformation implements ASTTransformation {
             return;
         }
 
-        ClassNode clazz = method.getDeclaringClass();
-
-        String decoratingFieldName = buildDecoratingFieldName(method);
-        FieldNode funcField;
-        while ((funcField = clazz.getField(decoratingFieldName)) != null && !funcFieldBelongsTo(method, funcField)) {
-            decoratingFieldName = "_" + decoratingFieldName;
-        }
-
-        if (funcField == null) {
+        FieldNode funcField = getFuncFieldFor(method);
+        if (isNewlyCreated(funcField)) {
             MethodNode decoratedMethod = copyMethodTo("decorated$" + method.getName(), method);
 
             MethodCallExpression createFunction = callX(classX(Function.class), "create", args(
                     closureThatCalls(decoratedMethod),
                     constX(method.getName()),
                     classX(method.getReturnType())));
-
-            funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), createFunction);
-            markFuncFieldAsBelongingTo(method, funcField);
+            funcField.setInitialValueExpression(createFunction);
 
             // Replace original method's body
             MethodCallExpression callFunctionField = callX(fieldX(funcField), "call", args(toVarList(method.getParameters())));
@@ -181,6 +172,26 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 getDecoratingAnnotation,
                 decoratorInstance));
         funcField.setInitialValueExpression(decorateExistingFunction);
+    }
+
+    private FieldNode getFuncFieldFor(MethodNode method) {
+        ClassNode clazz = method.getDeclaringClass();
+        String decoratingFieldName = buildDecoratingFieldName(method);
+
+        FieldNode funcField;
+        while ((funcField = clazz.getField(decoratingFieldName)) != null && !funcFieldBelongsTo(method, funcField)) {
+            decoratingFieldName = "_" + decoratingFieldName;
+        }
+
+        if (funcField == null) {
+            funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), null);
+            markFuncFieldAsBelongingTo(method, funcField);
+        }
+        return funcField;
+    }
+
+    private boolean isNewlyCreated(FieldNode funcField) {
+        return funcField.getInitialValueExpression() == null;
     }
 
     private boolean funcFieldBelongsTo(MethodNode method, FieldNode funcField) {
