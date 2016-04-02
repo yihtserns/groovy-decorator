@@ -16,42 +16,39 @@
 
 package com.github.yihtserns.groovy.decorator
 
+import com.squareup.burst.BurstJUnit4
+import com.squareup.burst.annotation.Burst
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
-import org.junit.runners.Parameterized.Parameters
 
 import static org.codehaus.groovy.control.customizers.builder.CompilerCustomizationBuilder.withConfig
 
 /**
  * @author yihtserns
  */
-@RunWith(Parameterized)
+@RunWith(BurstJUnit4)
 class InterceptTest {
 
-    @Parameters(name = '{0}')
-    static Collection<Object[]> classLoaders() {
-        def normalClassLoader = new GroovyClassLoader()
-        def compileStaticClassLoader = new GroovyClassLoader(
-            Thread.currentThread().contextClassLoader,
-            withConfig(new CompilerConfiguration()) { ast(groovy.transform.CompileStatic) })
+    private enum Compilation {
 
-        return [
-            [ 'normal compilation', normalClassLoader ] as Object[],
-            [ 'compile static', compileStaticClassLoader ] as Object[]
-        ]
+        NORMAL(cl: new GroovyClassLoader()),
+        STATIC(cl: new GroovyClassLoader(
+                Thread.currentThread().contextClassLoader,
+                withConfig(new CompilerConfiguration()) { ast(groovy.transform.CompileStatic) }))
+
+        ClassLoader cl
+
+        Class parseClass(String classScript) {
+            return cl.parseClass(classScript)
+        }
     }
 
-    def cl
-
-    InterceptTest(String compileMode, cl) {
-        this.cl = cl
-    }
+    @Burst Compilation compilation
 
     @Test
     void 'can decorate method on the fly'() {
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
+        Class clazz = compilation.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
             import com.github.yihtserns.groovy.decorator.Function
 
             class Greeter {
@@ -68,7 +65,7 @@ class InterceptTest {
 
     @Test
     void "closure can access class' field"() {
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
+        Class clazz = compilation.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
             class Greeter {
                 int count = 0
 
@@ -88,7 +85,7 @@ class InterceptTest {
 
     @Test
     public void 'can share method decoration'() {
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
+        Class clazz = compilation.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
             import com.github.yihtserns.groovy.decorator.Function
 
             class Greeter {
@@ -122,7 +119,7 @@ class InterceptTest {
 
     @Test
     void "closure class can access class' field"() {
-        Class clazz = cl.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
+        Class clazz = compilation.parseClass("""import com.github.yihtserns.groovy.decorator.Intercept
             class Greeter {
                 int count = 0
 
