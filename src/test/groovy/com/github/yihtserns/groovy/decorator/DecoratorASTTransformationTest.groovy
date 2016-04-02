@@ -32,7 +32,7 @@ import static org.junit.Assert.fail
 @RunWith(Parameterized)
 class DecoratorASTTransformationTest {
 
-    @Parameters
+    @Parameters(name = '{0}')
     static Collection<Object[]> instantiators() {
         def normalInstantiator = toInstantiator(new GroovyClassLoader())
         def compileStaticInstantiator = toInstantiator(
@@ -41,14 +41,14 @@ class DecoratorASTTransformationTest {
                 withConfig(new CompilerConfiguration()) { ast(groovy.transform.CompileStatic) }))
 
         return [
-            [ normalInstantiator ] as Object[],
-            [ compileStaticInstantiator ] as Object[]
+            [ 'normal compilation', normalInstantiator ] as Object[],
+            [ 'compile static', compileStaticInstantiator ] as Object[]
         ]
     }
     
     def toInstance
 
-    DecoratorASTTransformationTest(toInstance) {
+    DecoratorASTTransformationTest(String compileMode, toInstance) {
         this.toInstance = toInstance
     }
 
@@ -85,7 +85,7 @@ class DecoratorASTTransformationTest {
     }
 
     @Test
-    public void 'can decorate method with three params'() {
+    public void 'can decorate method with two params'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.decorator
 
             class Greeter {

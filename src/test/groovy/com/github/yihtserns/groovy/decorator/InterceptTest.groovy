@@ -30,7 +30,7 @@ import static org.codehaus.groovy.control.customizers.builder.CompilerCustomizat
 @RunWith(Parameterized)
 class InterceptTest {
 
-    @Parameters
+    @Parameters(name = '{0}')
     static Collection<Object[]> classLoaders() {
         def normalClassLoader = new GroovyClassLoader()
         def compileStaticClassLoader = new GroovyClassLoader(
@@ -38,14 +38,14 @@ class InterceptTest {
             withConfig(new CompilerConfiguration()) { ast(groovy.transform.CompileStatic) })
 
         return [
-            [ normalClassLoader ] as Object[],
-            [ compileStaticClassLoader ] as Object[]
+            [ 'normal compilation', normalClassLoader ] as Object[],
+            [ 'compile static', compileStaticClassLoader ] as Object[]
         ]
     }
 
     def cl
 
-    InterceptTest(cl) {
+    InterceptTest(String compileMode, cl) {
         this.cl = cl
     }
 
