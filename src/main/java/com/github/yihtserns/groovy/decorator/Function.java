@@ -52,17 +52,6 @@ public class Function extends Closure {
         return returnType;
     }
 
-    @Override
-    public Object getProperty(String property) {
-        if ("name".equals(property)) {
-            return getName();
-        }
-        if ("returnType".equals(property)) {
-            return getReturnType();
-        }
-        return super.getProperty(property);
-    }
-
     public Closure decorateWith(Closure<Closure> decorator) {
         return decorateWith(null, decorator);
     }
