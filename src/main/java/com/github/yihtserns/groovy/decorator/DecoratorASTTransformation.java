@@ -15,40 +15,22 @@
  */
 package com.github.yihtserns.groovy.decorator;
 
-import java.util.ArrayList;
-import java.util.List;
-import org.codehaus.groovy.ast.ASTNode;
-import org.codehaus.groovy.ast.AnnotationNode;
-import static org.codehaus.groovy.ast.ClassHelper.CLASS_Type;
-import static org.codehaus.groovy.ast.ClassHelper.make;
-import org.codehaus.groovy.ast.ClassNode;
-import org.codehaus.groovy.ast.FieldNode;
-import org.codehaus.groovy.ast.MethodNode;
-import org.codehaus.groovy.ast.Parameter;
-import org.codehaus.groovy.ast.VariableScope;
-import org.codehaus.groovy.ast.expr.ArgumentListExpression;
-import org.codehaus.groovy.ast.expr.ArrayExpression;
-import org.codehaus.groovy.ast.expr.ClassExpression;
-import org.codehaus.groovy.ast.expr.ClosureExpression;
-import org.codehaus.groovy.ast.expr.Expression;
-import org.codehaus.groovy.ast.expr.ListExpression;
-import org.codehaus.groovy.ast.expr.MethodCallExpression;
-import static org.codehaus.groovy.ast.expr.VariableExpression.THIS_EXPRESSION;
+import org.codehaus.groovy.ast.*;
+import org.codehaus.groovy.ast.expr.*;
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.constX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.fieldX;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
-import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SimpleMessage;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.codehaus.groovy.ast.ClassHelper.*;
+import static org.codehaus.groovy.ast.expr.VariableExpression.*;
+import static org.codehaus.groovy.ast.tools.GeneralUtils.*;
 
 /**
  * @author yihtserns
@@ -147,27 +129,9 @@ public class DecoratorASTTransformation implements ASTTransformation {
         }
 
         ClassNode clazz = method.getDeclaringClass();
-
-        String decoratingFieldName = buildDecoratingFieldName(method);
-        FieldNode funcField;
-        while ((funcField = clazz.getField(decoratingFieldName)) != null && !funcFieldBelongsTo(method, funcField)) {
-            decoratingFieldName = "_" + decoratingFieldName;
-        }
-
+        FieldNode funcField = getDecoratingField(method, clazz);
         if (funcField == null) {
-            MethodNode decoratedMethod = copyMethodTo("decorated$" + method.getName(), method);
-
-            MethodCallExpression createFunction = callX(classX(Function.class), "create", args(
-                    closureThatCalls(decoratedMethod),
-                    constX(method.getName()),
-                    classX(method.getReturnType())));
-
-            funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), createFunction);
-            markFuncFieldAsBelongingTo(method, funcField);
-
-            // Replace original method's body
-            MethodCallExpression callFunctionField = callX(fieldX(funcField), "call", args(toVarList(method.getParameters())));
-            method.setCode(stmt(callFunctionField));
+            funcField = createDecoratingField(method, clazz);
         }
 
         MethodCallExpression getDecoratingAnnotation = callX(methodX(method), "getAnnotation", args(classX(annotation.getClassNode())));
@@ -183,11 +147,37 @@ public class DecoratorASTTransformation implements ASTTransformation {
         funcField.setInitialValueExpression(decorateExistingFunction);
     }
 
-    private boolean funcFieldBelongsTo(MethodNode method, FieldNode funcField) {
+    /**
+     * @return returns <tt>decoratingField</tt> if it has been created before by other decorator, otherwise null
+     */
+    private FieldNode getDecoratingField(MethodNode method, ClassNode clazz) {
+        return clazz.getField(buildDecoratingFieldName(method, clazz));
+    }
+
+    private FieldNode createDecoratingField(MethodNode method, ClassNode clazz) {
+        String decoratingFieldName = buildDecoratingFieldName(method, clazz);
+        MethodNode decoratedMethod = copyMethodTo("decorated$" + method.getName(), method);
+
+        MethodCallExpression createFunction = callX(classX(Function.class), "create", args(
+                closureThatCalls(decoratedMethod),
+                constX(method.getName()),
+                classX(method.getReturnType())));
+
+        FieldNode funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), createFunction);
+        markFuncFieldAsBelongingTo(method, funcField);
+
+        // Replace original method's body
+        MethodCallExpression callFunctionField = callX(fieldX(funcField), "call", args(toVarList(method.getParameters())));
+        method.setCode(stmt(callFunctionField));
+
+        return funcField;
+    }
+
+    private static boolean funcFieldBelongsTo(MethodNode method, FieldNode funcField) {
         return method.equals(funcField.getNodeMetaData(METHOD_NODE_METADATA_KEY));
     }
 
-    private void markFuncFieldAsBelongingTo(MethodNode method, FieldNode funcField) {
+    private static void markFuncFieldAsBelongingTo(MethodNode method, FieldNode funcField) {
         funcField.setNodeMetaData(METHOD_NODE_METADATA_KEY, method);
     }
 
@@ -208,14 +198,20 @@ public class DecoratorASTTransformation implements ASTTransformation {
                 new VariableScope());
     }
 
-    private static String buildDecoratingFieldName(MethodNode method) {
+    private static String buildDecoratingFieldName(MethodNode method, ClassNode clazz) {
         StringBuilder decoratingFieldNameBuilder = new StringBuilder("decorating$" + method.getName().replaceAll("\\W", "\\$"));
 
         for (Parameter parameter : method.getParameters()) {
             decoratingFieldNameBuilder.append(buildTypeName(parameter.getType()));
         }
 
-        return decoratingFieldNameBuilder.toString();
+        String decoratingFieldName = decoratingFieldNameBuilder.toString();
+
+        FieldNode funcField;
+        while ((funcField = clazz.getField(decoratingFieldName)) != null && !funcFieldBelongsTo(method, funcField)) {
+            decoratingFieldName = "_" + decoratingFieldName;
+        }
+        return decoratingFieldName;
     }
 
     private static String buildTypeName(ClassNode type) {
