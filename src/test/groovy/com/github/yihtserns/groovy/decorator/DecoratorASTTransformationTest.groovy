@@ -85,7 +85,7 @@ class DecoratorASTTransformationTest {
     }
 
     @Test
-    public void 'can decorate method with three params'() {
+    public void 'can decorate method with two params'() {
         def instance = toInstance("""package com.github.yihtserns.groovy.decorator
 
             class Greeter {
