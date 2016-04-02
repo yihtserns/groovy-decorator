@@ -34,21 +34,25 @@ class DecoratorASTTransformationTest {
 
     @Parameters(name = '{0}')
     static Collection<Object[]> instantiators() {
-        def normalInstantiator = toInstantiator(new GroovyClassLoader())
-        def compileStaticInstantiator = toInstantiator(
+        def normalInstantiator = toInstantiatorWithName(
+            'normal compilation',
+            new GroovyClassLoader())
+
+        def compileStaticInstantiator = toInstantiatorWithName(
+            'compile static',
             new GroovyClassLoader(
                 Thread.currentThread().contextClassLoader,
                 withConfig(new CompilerConfiguration()) { ast(groovy.transform.CompileStatic) }))
 
         return [
-            [ 'normal compilation', normalInstantiator ] as Object[],
-            [ 'compile static', compileStaticInstantiator ] as Object[]
+            [ normalInstantiator ] as Object[],
+            [ compileStaticInstantiator ] as Object[]
         ]
     }
-    
+
     def toInstance
 
-    DecoratorASTTransformationTest(String compileMode, toInstance) {
+    DecoratorASTTransformationTest(toInstance) {
         this.toInstance = toInstance
     }
 
@@ -415,11 +419,21 @@ class DecoratorASTTransformationTest {
         throw new RuntimeException("Should not reach here")
     }
 
-    private static Closure toInstantiator(GroovyClassLoader cl) {
-        return { classScript ->
-            def clazz = cl.parseClass(classScript)
+    private static Action toInstantiatorWithName(String name, GroovyClassLoader cl) {
+        return [
+            call: { classScript ->
+                def clazz = cl.parseClass(classScript)
 
-            return clazz.newInstance()
-        }
+                return clazz.newInstance()
+            },
+            toString: { ->
+                name
+            }
+        ] as Action
+    }
+
+    private interface Action {
+
+        Object call(Object input);
     }
 }
