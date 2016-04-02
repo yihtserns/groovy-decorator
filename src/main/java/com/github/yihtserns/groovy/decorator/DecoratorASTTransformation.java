@@ -17,10 +17,13 @@ package com.github.yihtserns.groovy.decorator;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.AnnotationNode;
+
 import static org.codehaus.groovy.ast.ClassHelper.CLASS_Type;
 import static org.codehaus.groovy.ast.ClassHelper.make;
+
 import org.codehaus.groovy.ast.ClassNode;
 import org.codehaus.groovy.ast.FieldNode;
 import org.codehaus.groovy.ast.MethodNode;
@@ -33,9 +36,12 @@ import org.codehaus.groovy.ast.expr.ClosureExpression;
 import org.codehaus.groovy.ast.expr.Expression;
 import org.codehaus.groovy.ast.expr.ListExpression;
 import org.codehaus.groovy.ast.expr.MethodCallExpression;
+
 import static org.codehaus.groovy.ast.expr.VariableExpression.THIS_EXPRESSION;
+
 import org.codehaus.groovy.ast.stmt.Statement;
 import org.codehaus.groovy.ast.tools.GeneralUtils;
+
 import static org.codehaus.groovy.ast.tools.GeneralUtils.args;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.callX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.classX;
@@ -44,6 +50,7 @@ import static org.codehaus.groovy.ast.tools.GeneralUtils.ctorX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.fieldX;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.stmt;
 import static org.codehaus.groovy.ast.tools.GeneralUtils.varX;
+
 import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.control.messages.SimpleMessage;
@@ -178,16 +185,19 @@ public class DecoratorASTTransformation implements ASTTransformation {
         ClassNode clazz = method.getDeclaringClass();
         String decoratingFieldName = buildDecoratingFieldName(method);
 
-        FieldNode funcField;
-        while ((funcField = clazz.getField(decoratingFieldName)) != null && !funcFieldBelongsTo(method, funcField)) {
+        while (true) {
+            FieldNode funcField = clazz.getField(decoratingFieldName);
+            if (funcField == null) {
+                funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), null);
+                markFuncFieldAsBelongingTo(method, funcField);
+
+                return funcField;
+            }
+            if (funcFieldBelongsTo(method, funcField)) {
+                return funcField;
+            }
             decoratingFieldName = "_" + decoratingFieldName;
         }
-
-        if (funcField == null) {
-            funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), null);
-            markFuncFieldAsBelongingTo(method, funcField);
-        }
-        return funcField;
     }
 
     private boolean isNewlyCreated(FieldNode funcField) {
