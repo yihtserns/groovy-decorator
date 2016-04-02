@@ -153,7 +153,7 @@ public class DecoratorASTTransformation implements ASTTransformation {
             return;
         }
 
-        FieldNode funcField = getFuncFieldFor(method);
+        FieldNode funcField = getFuncFieldFor(method, buildDecoratingFieldName(method));
         if (isNewlyCreated(funcField)) {
             MethodNode decoratedMethod = copyMethodTo("decorated$" + method.getName(), method);
 
@@ -181,23 +181,22 @@ public class DecoratorASTTransformation implements ASTTransformation {
         funcField.setInitialValueExpression(decorateExistingFunction);
     }
 
-    private FieldNode getFuncFieldFor(MethodNode method) {
+    private FieldNode getFuncFieldFor(MethodNode method, String fieldName) {
         ClassNode clazz = method.getDeclaringClass();
-        String decoratingFieldName = buildDecoratingFieldName(method);
+        FieldNode funcField = clazz.getField(fieldName);
 
-        while (true) {
-            FieldNode funcField = clazz.getField(decoratingFieldName);
-            if (funcField == null) {
-                funcField = clazz.addField(decoratingFieldName, FieldNode.ACC_PRIVATE, make(Function.class), null);
-                markFuncFieldAsBelongingTo(method, funcField);
+        if (funcField == null) {
+            funcField = clazz.addField(fieldName, FieldNode.ACC_PRIVATE, make(Function.class), null);
+            markFuncFieldAsBelongingTo(method, funcField);
 
-                return funcField;
-            }
-            if (funcFieldBelongsTo(method, funcField)) {
-                return funcField;
-            }
-            decoratingFieldName = "_" + decoratingFieldName;
+            return funcField;
         }
+
+        if (funcFieldBelongsTo(method, funcField)) {
+            return funcField;
+        }
+
+        return getFuncFieldFor(method, "_" + fieldName);
     }
 
     private boolean isNewlyCreated(FieldNode funcField) {
